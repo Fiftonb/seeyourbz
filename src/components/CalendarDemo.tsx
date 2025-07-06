@@ -33,11 +33,8 @@ export function CalendarDemo() {
         <div className="flex items-center space-x-2">
           <CalendarIcon className="size-6 text-blue-600" />
           <Heading level={2} className="!text-xl">
-            日历演示
+            日历信息
           </Heading>
-          <Badge color="blue">
-            tyme4ts 支持
-          </Badge>
         </div>
         <div className="flex items-center space-x-2">
           <ClockIcon className="size-4 text-gray-500" />

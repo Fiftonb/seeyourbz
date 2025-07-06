@@ -22,6 +22,8 @@ import {
   UserIcon,
 } from '@heroicons/react/16/solid'
 import { InboxIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { label: '首页', url: '/' },
@@ -89,6 +91,8 @@ export function AppLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+
   return (
     <StackedLayout
       navbar={
@@ -100,7 +104,7 @@ export function AppLayout({
           <NavbarDivider className="max-lg:hidden" />
           <NavbarSection className="max-lg:hidden">
             {navItems.map(({ label, url }) => (
-              <NavbarItem key={label} href={url as any}>
+              <NavbarItem key={label} href={url as any} current={pathname === url}>
                 {label}
               </NavbarItem>
             ))}
@@ -125,19 +129,15 @@ export function AppLayout({
       sidebar={
         <Sidebar>
           <SidebarHeader>
-            <Dropdown>
-              <DropdownButton as={SidebarItem} className="lg:mb-2.5">
-                <Avatar initials="SB" className="bg-blue-500 text-white !size-6" />
-                <SidebarLabel>SeeYourBz</SidebarLabel>
-                <ChevronDownIcon />
-              </DropdownButton>
-              <TeamDropdownMenu />
-            </Dropdown>
+            <div className="flex items-center gap-3 px-2 py-2.5">
+              <Avatar initials="SB" className="bg-blue-500 text-white !size-6" />
+              <SidebarLabel>SeeYourBz</SidebarLabel>
+            </div>
           </SidebarHeader>
           <SidebarBody>
             <SidebarSection>
               {navItems.map(({ label, url }) => (
-                <SidebarItem key={label} href={url as any}>
+                <SidebarItem key={label} href={url as any} current={pathname === url}>
                   {label}
                 </SidebarItem>
               ))}
@@ -146,7 +146,21 @@ export function AppLayout({
         </Sidebar>
       }
     >
-      {children}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{
+            duration: 0.2,
+            ease: [0.25, 0.46, 0.45, 0.94],
+          }}
+          className="h-full"
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </StackedLayout>
   )
 } 

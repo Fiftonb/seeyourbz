@@ -19,7 +19,7 @@ export default function Home() {
           欢迎来到 SeeYourBz
         </Heading>
         <Text className="text-xl text-gray-600 dark:text-gray-400">
-          基于 tyme4ts 的强大日历应用
+          一个学习传统文化的工具站
         </Text>
       </div>
 
@@ -126,16 +126,11 @@ export default function Home() {
       <div className="space-y-6">
         <div className="text-center space-y-4">
           <Heading level={2} className="text-3xl font-bold text-gray-900 dark:text-white">
-            日历演示
+            日历信息
           </Heading>
           <Text className="text-lg text-gray-600 dark:text-gray-400">
-            探索强大的日历功能，体验基于 tyme4ts 的精准时间计算
+            探索对应日期的详细信息
           </Text>
-          <div className="flex justify-center">
-            <Badge color="cyan" className="text-sm">
-              tyme4ts 支持
-            </Badge>
-          </div>
         </div>
         
         {/* 日历演示组件 */}
