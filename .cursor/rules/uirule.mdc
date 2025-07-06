@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+All front-end pages must comply with the front-end style of my project, must be componentized for easy maintenance, and must use custom UI components under components

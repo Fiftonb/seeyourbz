@@ -122,57 +122,57 @@ export default function Home() {
 
       <Divider />
 
-      {/* 快速导航 */}
+      {/* 日历演示区域 - 优化布局 */}
       <div className="space-y-6">
-        <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
-          快速导航
-        </Heading>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-            <Heading level={3} className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              日历管理
-            </Heading>
-            <Text className="text-blue-700 dark:text-blue-300 mb-3">
-              查看和管理您的日程安排
-            </Text>
-            <Badge color="blue">查看详情</Badge>
-          </div>
-          
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
-            <Heading level={3} className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
-              数据统计
-            </Heading>
-            <Text className="text-green-700 dark:text-green-300 mb-3">
-              分析您的时间使用情况
-            </Text>
-            <Badge color="green">查看报告</Badge>
-          </div>
-          
-          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
-            <Heading level={3} className="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-2">
-              应用设置
-            </Heading>
-            <Text className="text-purple-700 dark:text-purple-300 mb-3">
-              个性化您的应用体验
-            </Text>
-            <Badge color="purple">进入设置</Badge>
-          </div>
-        </div>
-      </div>
-
-      <Divider />
-
-      {/* 日历演示区域 */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <div className="text-center space-y-4">
+          <Heading level={2} className="text-3xl font-bold text-gray-900 dark:text-white">
             日历演示
           </Heading>
-          <Badge color="cyan">tyme4ts 支持</Badge>
+          <Text className="text-lg text-gray-600 dark:text-gray-400">
+            探索强大的日历功能，体验基于 tyme4ts 的精准时间计算
+          </Text>
+          <div className="flex justify-center">
+            <Badge color="cyan" className="text-sm">
+              tyme4ts 支持
+            </Badge>
+          </div>
         </div>
         
-        <CalendarDemo />
+        {/* 日历演示组件 */}
+        <div className="max-w-4xl mx-auto">
+          <CalendarDemo />
+        </div>
+        
+        {/* 功能说明 */}
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <Heading level={3} className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              功能特色
+            </Heading>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge color="blue" className="text-xs">公历</Badge>
+                  <Text className="text-sm">精准的公历日期计算</Text>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge color="red" className="text-xs">农历</Badge>
+                  <Text className="text-sm">传统农历日期转换</Text>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge color="green" className="text-xs">节气</Badge>
+                  <Text className="text-sm">二十四节气查询</Text>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge color="purple" className="text-xs">星座</Badge>
+                  <Text className="text-sm">星座信息显示</Text>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
