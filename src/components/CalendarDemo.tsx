@@ -2,6 +2,14 @@
 
 import { useState } from 'react'
 import { SolarDay } from 'tyme4ts'
+import { Heading } from '@/components/ui/heading'
+import { Text } from '@/components/ui/text'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Divider } from '@/components/ui/divider'
+import { DescriptionList, DescriptionDetails, DescriptionTerm } from '@/components/ui/description-list'
+import { CalendarIcon, StarIcon, SunIcon } from '@heroicons/react/16/solid'
 
 export function CalendarDemo() {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -12,34 +20,118 @@ export function CalendarDemo() {
     selectedDate.getDate()
   )
 
+  const lunarDay = solarDay.getLunarDay()
+  const sixtyCycleDay = lunarDay.getSixtyCycleDay()
+  const constellation = solarDay.getConstellation()
+  const term = solarDay.getTerm()
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-      <h3 className="text-xl font-semibold mb-4">日历演示</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex items-center space-x-2 mb-6">
+        <CalendarIcon className="size-6 text-blue-600" />
+        <Heading level={2} className="!text-xl">
+          日历演示
+        </Heading>
+        <Badge color="blue">
+          tyme4ts 支持
+        </Badge>
+      </div>
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">选择日期：</label>
-        <input
+      <div className="mb-6">
+        <Text className="text-sm font-medium mb-2">
+          选择日期：
+        </Text>
+        <Input
           type="date"
           value={selectedDate.toISOString().split('T')[0]}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          className="border border-gray-300 rounded px-3 py-2"
+          className="max-w-xs"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <h4 className="font-medium">公历信息</h4>
-          <p>日期：{solarDay.toString()}</p>
-          <p>星期：{solarDay.getWeek().getName()}</p>
-          <p>节气：{solarDay.getTerm()?.getName() || '无'}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <div className="flex items-center space-x-2 mb-3">
+            <SunIcon className="size-5 text-orange-600" />
+            <Heading level={3} className="!text-lg">
+              公历信息
+            </Heading>
+          </div>
+          
+          <DescriptionList>
+            <DescriptionTerm>日期</DescriptionTerm>
+            <DescriptionDetails>
+              <Text className="font-medium">{solarDay.toString()}</Text>
+            </DescriptionDetails>
+            
+            <DescriptionTerm>星期</DescriptionTerm>
+            <DescriptionDetails>
+              <Badge color="blue">
+                {solarDay.getWeek().getName()}
+              </Badge>
+            </DescriptionDetails>
+            
+            <DescriptionTerm>节气</DescriptionTerm>
+            <DescriptionDetails>
+              {term ? (
+                <Badge color="green">{term.getName()}</Badge>
+              ) : (
+                <Text className="text-gray-500">无</Text>
+              )}
+            </DescriptionDetails>
+            
+            <DescriptionTerm>星座</DescriptionTerm>
+            <DescriptionDetails>
+              <div className="flex items-center space-x-1">
+                <StarIcon className="size-4 text-yellow-600" />
+                <Badge color="purple">{constellation.toString()}</Badge>
+              </div>
+            </DescriptionDetails>
+          </DescriptionList>
         </div>
         
-        <div className="space-y-2">
-          <h4 className="font-medium">农历信息</h4>
-          <p>日期：{solarDay.getLunarDay().toString()}</p>
-          <p>干支：{solarDay.getLunarDay().getSixtyCycleDay().toString()}</p>
-          <p>星座：{solarDay.getConstellation().toString()}</p>
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <div className="flex items-center space-x-2 mb-3">
+            <CalendarIcon className="size-5 text-red-600" />
+            <Heading level={3} className="!text-lg">
+              农历信息
+            </Heading>
+          </div>
+          
+          <DescriptionList>
+            <DescriptionTerm>农历日期</DescriptionTerm>
+            <DescriptionDetails>
+              <Text className="font-medium">{lunarDay.toString()}</Text>
+            </DescriptionDetails>
+            
+            <DescriptionTerm>干支纪日</DescriptionTerm>
+            <DescriptionDetails>
+              <Badge color="orange">{sixtyCycleDay.toString()}</Badge>
+            </DescriptionDetails>
+            
+            <DescriptionTerm>农历年份</DescriptionTerm>
+            <DescriptionDetails>
+              <Text>{lunarDay.getYear().toString()}</Text>
+            </DescriptionDetails>
+            
+            <DescriptionTerm>农历月份</DescriptionTerm>
+            <DescriptionDetails>
+              <Badge color="red">{lunarDay.getMonth().toString()}</Badge>
+            </DescriptionDetails>
+          </DescriptionList>
         </div>
+      </div>
+      
+      <Divider className="my-6" />
+      
+      <div className="text-center">
+        <Button color="blue" className="mr-2">
+          <CalendarIcon />
+          查看完整日历
+        </Button>
+        <Button outline>
+          重置为今天
+        </Button>
       </div>
     </div>
   )

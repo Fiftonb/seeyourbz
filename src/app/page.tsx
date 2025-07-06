@@ -1,31 +1,179 @@
 import { SolarDay } from 'tyme4ts'
 import { CalendarDemo } from '@/components/CalendarDemo'
+import { Heading } from '@/components/ui/heading'
+import { Text } from '@/components/ui/text'
+import { Badge } from '@/components/ui/badge'
+import { Divider } from '@/components/ui/divider'
 
 export default function Home() {
   const today = SolarDay.fromYmd(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())
+  const lunarDay = today.getLunarDay()
+  const constellation = today.getConstellation()
+  const term = today.getTerm()
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <div className="fixed left-0 top-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <div className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0">
-            <h1 className="text-4xl font-bold">SeeYourBz</h1>
+    <div className="space-y-8">
+      {/* 欢迎标题区域 */}
+      <div className="text-center space-y-4">
+        <Heading level={1} className="text-4xl font-bold text-gray-900 dark:text-white">
+          欢迎来到 SeeYourBz
+        </Heading>
+        <Text className="text-xl text-gray-600 dark:text-gray-400">
+          基于 tyme4ts 的强大日历应用
+        </Text>
+      </div>
+
+      <Divider />
+
+      {/* 今日信息概览 */}
+      <div className="space-y-6">
+        <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
+          今日信息
+        </Heading>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 公历信息 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <Heading level={3} className="text-lg font-semibold">
+                公历
+              </Heading>
+              <Badge color="blue">今日</Badge>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">日期</Text>
+                <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {today.toString()}
+                </Text>
+              </div>
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">星期</Text>
+                <Badge color="green">
+                  {today.getWeek().getName()}
+                </Badge>
+              </div>
+              {term && (
+                <div>
+                  <Text className="text-sm text-gray-600 dark:text-gray-400">节气</Text>
+                  <Badge color="yellow">
+                    {term.getName()}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 农历信息 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <Heading level={3} className="text-lg font-semibold">
+                农历
+              </Heading>
+              <Badge color="red">传统</Badge>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">农历日期</Text>
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  {lunarDay.toString()}
+                </Text>
+              </div>
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">干支纪日</Text>
+                <Badge color="orange">
+                  {lunarDay.getSixtyCycleDay().toString()}
+                </Badge>
+              </div>
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">年份</Text>
+                <Text className="text-lg font-medium text-gray-900 dark:text-white">
+                  {lunarDay.getYear().toString()}
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* 星座信息 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <Heading level={3} className="text-lg font-semibold">
+                星座
+              </Heading>
+              <Badge color="purple">运势</Badge>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">当前星座</Text>
+                <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {constellation.toString()}
+                </Text>
+              </div>
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">提示</Text>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">
+                  今日运势良好，适合处理重要事务
+                </Text>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:translate-y-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">今日日历</h2>
-          <div className="space-y-2">
-            <p className="text-lg">公历：{today.toString()}</p>
-            <p className="text-lg">农历：{today.getLunarDay().toString()}</p>
-            <p className="text-lg">干支：{today.getLunarDay().getSixtyCycleDay().toString()}</p>
+      <Divider />
+
+      {/* 快速导航 */}
+      <div className="space-y-6">
+        <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
+          快速导航
+        </Heading>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <Heading level={3} className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+              日历管理
+            </Heading>
+            <Text className="text-blue-700 dark:text-blue-300 mb-3">
+              查看和管理您的日程安排
+            </Text>
+            <Badge color="blue">查看详情</Badge>
+          </div>
+          
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
+            <Heading level={3} className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
+              数据统计
+            </Heading>
+            <Text className="text-green-700 dark:text-green-300 mb-3">
+              分析您的时间使用情况
+            </Text>
+            <Badge color="green">查看报告</Badge>
+          </div>
+          
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
+            <Heading level={3} className="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-2">
+              应用设置
+            </Heading>
+            <Text className="text-purple-700 dark:text-purple-300 mb-3">
+              个性化您的应用体验
+            </Text>
+            <Badge color="purple">进入设置</Badge>
           </div>
         </div>
       </div>
 
-      <CalendarDemo />
-    </main>
+      <Divider />
+
+      {/* 日历演示区域 */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
+            日历演示
+          </Heading>
+          <Badge color="cyan">tyme4ts 支持</Badge>
+        </div>
+        
+        <CalendarDemo />
+      </div>
+    </div>
   )
 } 
