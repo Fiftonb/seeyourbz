@@ -1280,3 +1280,376 @@ export function getCompleteEightCharInfo(birthTime: Date, gender: 'MAN' | 'WOMAN
     tabooAnalysis: getTabooAnalysis(birthTime)
   }
 } 
+
+// 黄历信息接口
+export interface AlmanacInfo {
+  // 基础日期信息
+  solarDate: string
+  lunarDate: string
+  weekDay: string
+  
+  // 宜忌信息
+  recommends: string[]  // 宜
+  avoids: string[]      // 忌
+  
+  // 神煞信息
+  goodGods: string[]    // 吉神宜趋
+  badGods: string[]     // 凶神宜忌
+  
+  // 值神信息
+  duty: string          // 值神
+  
+  // 建除十二神
+  buildGod: string      // 建除
+  
+  // 九星信息
+  nineStar: string      // 九星
+  
+  // 二十八宿
+  star28: string        // 二十八宿
+  
+  // 胎神方位
+  fetus: string         // 胎神
+  
+  // 冲煞信息
+  clash: string         // 冲
+  evil: string          // 煞
+  
+  // 彭祖百忌
+  pengzu: string        // 彭祖百忌
+  
+  // 其他信息
+  phase: string         // 月相
+  season: string        // 季节
+  festival: string | null // 传统节日
+}
+
+// 时辰宜忌信息接口
+export interface HourTabooInfo {
+  hour: string          // 时辰
+  hourName: string      // 时辰名
+  hourRange: string     // 时间范围
+  recommends: string[]  // 时辰宜
+  avoids: string[]      // 时辰忌
+  description: string   // 描述
+}
+
+/**
+ * 获取指定日期的完整黄历信息
+ * @param date - 日期对象
+ * @returns 黄历信息
+ */
+export function getAlmanacInfo(date: Date): AlmanacInfo {
+  const solarDay = SolarDay.fromYmd(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
+  )
+  
+  const lunarDay = solarDay.getLunarDay()
+  
+  // 获取宜忌
+  const recommends = lunarDay.getRecommends().map(taboo => taboo.getName())
+  const avoids = lunarDay.getAvoids().map(taboo => taboo.getName())
+  
+  // 获取神煞
+  const gods = lunarDay.getGods()
+  const goodGods: string[] = []
+  const badGods: string[] = []
+  
+  gods.forEach(god => {
+    if (god.getLuck().getName() === '吉') {
+      goodGods.push(god.getName())
+    } else {
+      badGods.push(god.getName())
+    }
+  })
+  
+  // 获取值神
+  const duty = lunarDay.getDuty().getName()
+  
+  // 获取建除十二神 (通过值神获取)
+  const buildGod = duty
+  
+  // 获取九星
+  const nineStar = lunarDay.getNineStar().getName()
+  
+  // 获取二十八宿
+  const star28 = lunarDay.getTwentyEightStar().getName()
+  
+  // 获取胎神
+  const fetus = lunarDay.getFetusDay().getName()
+  
+  // 获取冲煞信息
+  const dayGanzhi = lunarDay.getSixtyCycle()
+  const clashBranch = dayGanzhi.getEarthBranch().getOpposite()
+  const clash = `冲${clashBranch.getZodiac().getName()}(${clashBranch.getName()})`
+  
+  // 获取煞向 (简化处理)
+  const evilDirection = dayGanzhi.getEarthBranch().getDirection().getName()
+  const evil = `${evilDirection}煞`
+  
+  // 获取彭祖百忌
+  const pengZu = dayGanzhi.getPengZu()
+  const pengzuHeaven = pengZu.getPengZuHeavenStem().getName()
+  const pengzuEarth = pengZu.getPengZuEarthBranch().getName()
+  const pengzu = `${pengzuHeaven} ${pengzuEarth}`
+  
+  // 获取月相
+  const phase = lunarDay.getPhase().getName()
+  
+  // 获取季节
+  const season = lunarDay.getLunarMonth().getSeason().getName()
+  
+  // 获取传统节日
+  const festival = lunarDay.getFestival()
+  
+  return {
+    solarDate: solarDay.toString(),
+    lunarDate: lunarDay.toString(),
+    weekDay: solarDay.getWeek().getName(),
+    recommends,
+    avoids,
+    goodGods,
+    badGods,
+    duty,
+    buildGod,
+    nineStar,
+    star28,
+    fetus,
+    clash,
+    evil,
+    pengzu,
+    phase,
+    season,
+    festival: festival ? festival.getName() : null
+  }
+}
+
+/**
+ * 获取指定日期的时辰宜忌信息
+ * @param date - 日期对象
+ * @returns 时辰宜忌信息数组（12个时辰）
+ */
+export function getHourTabooInfo(date: Date): HourTabooInfo[] {
+  const solarDay = SolarDay.fromYmd(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
+  )
+  
+  const lunarDay = solarDay.getLunarDay()
+  const lunarMonth = lunarDay.getLunarMonth()
+  const lunarYear = lunarMonth.getLunarYear()
+  
+  const hourTaboos: HourTabooInfo[] = []
+  
+  // 遍历12个时辰
+  for (let hour = 0; hour < 24; hour += 2) {
+    const lunarHour = LunarHour.fromYmdHms(
+      lunarYear.getYear(),
+      lunarMonth.getMonth() * (lunarMonth.isLeap() ? -1 : 1),
+      lunarDay.getDay(),
+      hour,
+      0,
+      0
+    )
+    
+    const hourIndex = Math.floor(hour / 2)
+    const hourNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    const hourRanges = [
+      '23:00-01:00', '01:00-03:00', '03:00-05:00', '05:00-07:00',
+      '07:00-09:00', '09:00-11:00', '11:00-13:00', '13:00-15:00',
+      '15:00-17:00', '17:00-19:00', '19:00-21:00', '21:00-23:00'
+    ]
+    
+    const recommends = lunarHour.getRecommends().map(taboo => taboo.getName())
+    const avoids = lunarHour.getAvoids().map(taboo => taboo.getName())
+    
+    hourTaboos.push({
+      hour: lunarHour.getSixtyCycle().toString(),
+      hourName: hourNames[hourIndex],
+      hourRange: hourRanges[hourIndex],
+      recommends,
+      avoids,
+      description: `${hourNames[hourIndex]}时（${hourRanges[hourIndex]}）`
+    })
+  }
+  
+  return hourTaboos
+}
+
+/**
+ * 获取今日黄历信息
+ * @returns 今日黄历信息
+ */
+export function getTodayAlmanac(): AlmanacInfo {
+  return getAlmanacInfo(new Date())
+}
+
+/**
+ * 判断今日是否宜某事
+ * @param activity - 活动名称
+ * @returns 是否适宜
+ */
+export function isTodayGoodFor(activity: string): boolean {
+  const almanac = getTodayAlmanac()
+  return almanac.recommends.includes(activity)
+}
+
+/**
+ * 判断今日是否忌某事
+ * @param activity - 活动名称
+ * @returns 是否禁忌
+ */
+export function isTodayBadFor(activity: string): boolean {
+  const almanac = getTodayAlmanac()
+  return almanac.avoids.includes(activity)
+}
+
+/**
+ * 获取指定日期范围内的黄历信息
+ * @param startDate - 开始日期
+ * @param endDate - 结束日期
+ * @returns 黄历信息数组
+ */
+export function getAlmanacRange(startDate: Date, endDate: Date): AlmanacInfo[] {
+  const almanacs: AlmanacInfo[] = []
+  const currentDate = new Date(startDate)
+  
+  while (currentDate <= endDate) {
+    almanacs.push(getAlmanacInfo(new Date(currentDate)))
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+  
+  return almanacs
+}
+
+/**
+ * 查找适宜某活动的日期
+ * @param activity - 活动名称
+ * @param startDate - 开始查找的日期
+ * @param days - 查找的天数范围
+ * @returns 适宜的日期数组
+ */
+export function findGoodDatesFor(activity: string, startDate: Date = new Date(), days: number = 30): Date[] {
+  const goodDates: Date[] = []
+  const currentDate = new Date(startDate)
+  
+  for (let i = 0; i < days; i++) {
+    const almanac = getAlmanacInfo(currentDate)
+    if (almanac.recommends.includes(activity) && !almanac.avoids.includes(activity)) {
+      goodDates.push(new Date(currentDate))
+    }
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+  
+  return goodDates
+}
+
+/**
+ * 获取黄历活动的详细说明
+ * @returns 常见黄历活动的说明对象
+ */
+export function getAlmanacActivityDescriptions(): { [key: string]: string } {
+  return {
+    '嫁娶': '男娶女嫁，举行结婚大典的吉日',
+    '祭祀': '指祠堂之祭祀、即祭拜祖先或庙寺的祭拜',
+    '出行': '指远行、旅游、出差等',
+    '修造': '指建造、修缮房屋等',
+    '动土': '建筑房屋时、第一次动起锄头挖土',
+    '安床': '指安置床铺之事',
+    '开市': '商店开张营业或年后第一次开张营业',
+    '交易': '订立各种契约互相买卖之事',
+    '立券': '订立各种契约买卖之事',
+    '入宅': '迁入新居',
+    '移徙': '迁移居所',
+    '破土': '建筑时、第一次动锄头挖土等',
+    '安葬': '举行埋葬仪式',
+    '启攒': '墓地迁葬',
+    '解除': '清扫房屋、解除灾难',
+    '沐浴': '祈福设醮或还愿等',
+    '裁衣': '裁制新娘衣服或给死者做寿衣',
+    '冠笄': '男女成人之礼',
+    '会亲友': '聚集朋友',
+    '安机械': '安装机器',
+    '造车器': '制作车辆等工具',
+         '纳财': '购屋产业、进货、收帐等',
+     '栽种': '播种、种植花草',
+     '牧养': '牧养牲畜',
+     '造畜稠': '修建牲畜棚舍',
+     '教牛马': '训练牛马等牲畜',
+     '破屋壤垣': '拆除房屋或围墙',
+     '拆卸': '拆卸建筑物等',
+     '开渠': '筑下水道、水沟',
+     '掘井开池': '开凿水井、挖掘池塘',
+     '开厕': '建造厕所',
+     '造仓库': '建造仓库',
+     '塞穴': '填平洞穴',
+     '平治道涂': '铺平道路',
+     '造桥': '建造桥梁',
+     '作灶': '安装灶具',
+     '治病': '治疗疾病',
+     '结网': '制作鱼网等',
+     '理发': '剃头、修发',
+     '整手足甲': '修剪指甲等',
+     '求医': '去看病',
+     '疗病': '治疗疾病',
+     '词讼': '诉讼、打官司',
+     '起基': '建筑房屋的第一步',
+     '竖柱上梁': '房屋建造的重要步骤',
+     '开柱眼': '在柱子上凿眼',
+     '穿屏扇架': '制作屏风、扇子等',
+     '盖屋合脊': '盖房子、合龙',
+     '开厨': '安装灶具开始使用',
+     '造船': '建造船只',
+     '造庙': '建造寺庙',
+     '作井': '挖掘水井',
+     '作陂放水': '建造河堤、放水灌溉',
+     '造酒': '酿造酒类',
+     '造车': '制作车辆',
+     '造器': '制作器具',
+     '修饰垣墙': '修建围墙',
+     '苫盖': '修理屋顶',
+     '修仓': '修理仓库',
+     '鼓铸': '冶炼金属、铸造器具',
+     '酝酿': '酿造酒类等',
+     '造畜椆栖': '建造牲畜棚舍',
+     '会友': '朋友聚会',
+     '纳婿': '招赘女婿',
+     '问名': '求婚问名',
+     '纳采': '缔结婚姻的仪式、受授聘金',
+     '纳征': '缔结婚姻的仪式、受授聘金',
+     '入学': '拜师学艺',
+     '习艺': '学习手艺',
+     '上官赴任': '走马上任',
+     '临政亲民': '临政亲民',
+     '结婚姻': '结成婚姻关系',
+     '开仓': '商家开仓营业',
+     '出货财': '出货、销售',
+     '穿井': '挖掘水井',
+     '纳畜': '买入牲畜',
+     '馀事勿取': '除了黄历上特别标明可以做的事情之外，其他事情都不宜进行',
+     '诸事不宜': '所有事情都不适合进行，宜静不宜动的日子'
+  }
+}
+
+/**
+ * 获取黄历的简化版本（只包含核心信息）
+ * @param date - 日期对象
+ * @returns 简化的黄历信息
+ */
+export function getSimpleAlmanac(date: Date) {
+  const almanac = getAlmanacInfo(date)
+  
+  return {
+    date: almanac.solarDate,
+    lunarDate: almanac.lunarDate,
+    weekDay: almanac.weekDay,
+    recommends: almanac.recommends.slice(0, 3), // 只取前3个
+    avoids: almanac.avoids.slice(0, 3),         // 只取前3个
+    goodGods: almanac.goodGods.slice(0, 2),     // 只取前2个
+    badGods: almanac.badGods.slice(0, 2),       // 只取前2个
+    summary: `宜：${almanac.recommends.slice(0, 3).join('、') || '无'} | 忌：${almanac.avoids.slice(0, 3).join('、') || '无'}`
+  }
+} 

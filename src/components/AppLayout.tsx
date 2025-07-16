@@ -29,7 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 const navItems = [
   { label: '首页', url: '/' },
   { label: '命理', url: '/destiny' },
-  { label: '统计', url: '/statistics' },
+  { label: '黄历', url: '/almanac' },
   { label: '设置', url: '/settings' },
 ]
 
