@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import {
   Dropdown,
@@ -27,7 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { label: '首页', url: '/' },
-  { label: '日历', url: '/calendar' },
+  { label: '命理', url: '/destiny' },
   { label: '统计', url: '/statistics' },
   { label: '设置', url: '/settings' },
 ]
@@ -92,6 +93,24 @@ export function AppLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // 防止初始加载时的动画闪烁
+  useEffect(() => {
+    // 添加预加载类
+    document.body.classList.add('preload')
+    
+    // 页面加载完成后移除预加载类，启用动画
+    const timer = setTimeout(() => {
+      document.body.classList.remove('preload')
+      setIsLoaded(true)
+    }, 100) // 短暂延迟确保样式稳定
+    
+    return () => {
+      clearTimeout(timer)
+      document.body.classList.remove('preload')
+    }
+  }, [])
 
   return (
     <StackedLayout
@@ -146,21 +165,27 @@ export function AppLayout({
         </Sidebar>
       }
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{
-            duration: 0.2,
-            ease: [0.25, 0.46, 0.45, 0.94],
-          }}
-          className="h-full"
-        >
+      {isLoaded ? (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0.95 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0.95 }}
+            transition={{
+              duration: 0.1,
+              ease: "linear",
+            }}
+            className="h-full"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      ) : (
+        <div className="h-full opacity-0">
           {children}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      )}
     </StackedLayout>
   )
 } 

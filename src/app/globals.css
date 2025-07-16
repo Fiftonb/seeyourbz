@@ -2,26 +2,387 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   CSS 变量定义
+   ============================================================================ */
 :root {
+  /* 颜色变量 - 默认浅色模式 */
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
+  
+  /* 输入框变量 */
+  --input-border-color: rgb(209 213 219); /* gray-300 */
+  --input-border-color-hover: rgb(156 163 175); /* gray-400 */
+  --input-border-color-focus: rgb(239 68 68); /* red-500 */
+  --input-bg-color: rgb(255 255 255);
+  --input-text-color: rgb(17 24 39); /* gray-900 */
+  --input-min-height: 2.5rem;
+  --input-border-radius: 0.5rem;
+  --input-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --input-transition: all 0.3s ease;
+  
+  /* 下拉箭头图标 */
+  --select-arrow: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  
+  /* 添加渲染稳定性 */
+  color-scheme: light;
 }
 
+/* 暗色模式变量 - 使用类而不是媒体查询，避免闪烁 */
+:root.dark,
+[data-theme="dark"] {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+  
+  /* 深色模式下的输入框变量 */
+  --input-border-color: rgb(75 85 99); /* gray-600 */
+  --input-border-color-hover: rgb(107 114 128); /* gray-500 */
+  --input-border-color-focus: rgb(248 113 113); /* red-400 */
+  --input-bg-color: rgb(55 65 81 / 0.5); /* gray-700/50 */
+  --input-text-color: rgb(255 255 255);
+  
+  color-scheme: dark;
+}
+
+/* 媒体查询作为后备方案 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
+    
+    /* 深色模式下的输入框变量 */
+    --input-border-color: rgb(75 85 99); /* gray-600 */
+    --input-border-color-hover: rgb(107 114 128); /* gray-500 */
+    --input-border-color-focus: rgb(248 113 113); /* red-400 */
+    --input-bg-color: rgb(55 65 81 / 0.5); /* gray-700/50 */
+    --input-text-color: rgb(255 255 255);
+    
+    color-scheme: dark;
   }
+}
+
+/* ============================================================================
+   基础样式
+   ============================================================================ */
+
+/* 防止初始渲染时的样式闪烁 */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* 防止布局抖动 */
+  scroll-behavior: smooth;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  /* 简化背景，减少渲染复杂度 */
+  background-color: rgb(var(--background-start-rgb));
+  /* 防止页面抖动 */
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* 确保字体平滑渲染 */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-variation-settings: 'opsz' 32;
+  /* 优化渲染性能 */
+  will-change: auto;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ============================================================================
+   统一输入框样式系统
+   ============================================================================ */
+
+/* 基础输入框容器 */
+.unified-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--input-min-height);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--input-text-color);
+  background-color: var(--input-bg-color);
+  border: 2px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  box-shadow: var(--input-shadow);
+  transition: var(--input-transition);
+  cursor: pointer;
+}
+
+.unified-input:hover {
+  border-color: var(--input-border-color-hover);
+}
+
+.unified-input:focus-within {
+  border-color: var(--input-border-color-focus);
+}
+
+/* 重置输入框元素样式 */
+.unified-input input,
+.unified-input select,
+input.unified-input,
+select.unified-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font-size: inherit;
+  padding: 0;
+  margin: 0;
+  cursor: inherit;
+}
+
+/* 下拉选择框箭头 */
+select.unified-input {
+  background-image: var(--select-arrow);
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
+  padding-right: 2rem;
+}
+
+/* ============================================================================
+   特定输入类型优化
+   ============================================================================ */
+
+/* 数字输入框 - 隐藏加减按钮 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 日期时间输入框 - 简化样式 */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* 日期时间输入框内部元素 */
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.125rem 0.25rem;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   辅助样式类
+   ============================================================================ */
+
+/* 输入框状态样式 */
+.unified-input.error {
+  border-color: rgb(239 68 68); /* red-500 */
+}
+
+.unified-input.success {
+  border-color: rgb(34 197 94); /* green-500 */
+}
+
+.unified-input.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: rgb(249 250 251); /* gray-50 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .unified-input.disabled {
+    background-color: rgb(31 41 55); /* gray-800 */
+  }
+}
+
+/* 小尺寸输入框 */
+.unified-input.sm {
+  min-height: 2rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+}
+
+/* 大尺寸输入框 */
+.unified-input.lg {
+  min-height: 3rem;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+}
+
+/* ============================================================================
+   动画效果
+   ============================================================================ */
+
+/* 防止页面加载时动画闪烁 */
+.preload * {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -ms-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* 淡入动画 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 向下滑动动画 */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 向上滑动动画 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从底部滑入动画 */
+@keyframes slide-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 脉冲效果 - 减少幅度 */
+@keyframes pulse-custom {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* 进度条填充动画 */
+@keyframes progress-fill {
+  0% {
+    width: 0%;
+  }
+  33% {
+    width: 30%;
+  }
+  66% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* 应用动画类 - 只在页面完全加载后生效 */
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-pulse-custom {
+  animation: pulse-custom 1s infinite;
+}
+
+.animate-slide-in-bottom {
+  animation: slide-in-bottom 0.5s ease-out;
+}
+
+/* 淡出动画 */
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.3s ease-out forwards;
+}
+
+/* 延迟动画 - 减少延迟时间 */
+.animate-delay-100 {
+  animation-delay: 0.05s;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.15s;
+}
+
+.animate-delay-400 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-500 {
+  animation-delay: 0.25s;
 } 

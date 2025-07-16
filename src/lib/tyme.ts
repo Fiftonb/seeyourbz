@@ -236,6 +236,14 @@ export interface CompleteEightCharInfo {
   // 十神分析
   tenStarAnalysis: TenStarAnalysis
   
+  // 五行分析
+  elementAnalysis: {
+    year: string
+    month: string
+    day: string
+    hour: string
+  }
+  
   // 藏干分析
   hideHeavenStemAnalysis: HideHeavenStemInfo[]
   
@@ -853,15 +861,15 @@ export function getTenStarAnalysis(date: Date): TenStarAnalysis {
   // 日元(日主)
   const dayMaster = eightChar.getDay().getHeavenStem()
   
-  // 计算各柱十神
+  // 计算各柱十神 - 日柱显示为"日主"
   const yearTenStar = dayMaster.getTenStar(eightChar.getYear().getHeavenStem()).getName()
   const monthTenStar = dayMaster.getTenStar(eightChar.getMonth().getHeavenStem()).getName()
-  const dayTenStar = dayMaster.getTenStar(eightChar.getDay().getHeavenStem()).getName()
+  const dayTenStar = '日主' // 日柱固定显示为日主
   const hourTenStar = dayMaster.getTenStar(eightChar.getHour().getHeavenStem()).getName()
   
-  // 统计十神数量
+  // 统计十神数量 - 不包括日主
   const tenStarCount: { [key: string]: number } = {}
-  const tenStars = [yearTenStar, monthTenStar, dayTenStar, hourTenStar]
+  const tenStars = [yearTenStar, monthTenStar, hourTenStar] // 排除日主
   
   tenStars.forEach(star => {
     tenStarCount[star] = (tenStarCount[star] || 0) + 1
@@ -888,6 +896,51 @@ export function getTenStarAnalysis(date: Date): TenStarAnalysis {
     tenStarCount,
     strongTenStars,
     weakTenStars
+  }
+}
+
+/**
+ * 获取五行分析
+ * @param date - 日期
+ * @returns 五行分析 - 格式：天干五行+地支五行+柱名
+ */
+export function getElementAnalysis(date: Date) {
+  const solarDay = SolarDay.fromYmd(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
+  )
+  
+  const lunarDay = solarDay.getLunarDay()
+  const lunarMonth = lunarDay.getLunarMonth()
+  const lunarYear = lunarMonth.getLunarYear()
+  
+  const lunarHour = LunarHour.fromYmdHms(
+    lunarYear.getYear(),
+    lunarMonth.getMonth() * (lunarMonth.isLeap() ? -1 : 1),
+    lunarDay.getDay(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds()
+  )
+  
+  const eightChar = lunarHour.getEightChar()
+  
+  // 获取各柱的天干地支五行
+  const yearHeavenElement = eightChar.getYear().getHeavenStem().getElement().getName()
+  const yearEarthElement = eightChar.getYear().getEarthBranch().getElement().getName()
+  const monthHeavenElement = eightChar.getMonth().getHeavenStem().getElement().getName()
+  const monthEarthElement = eightChar.getMonth().getEarthBranch().getElement().getName()
+  const dayHeavenElement = eightChar.getDay().getHeavenStem().getElement().getName()
+  const dayEarthElement = eightChar.getDay().getEarthBranch().getElement().getName()
+  const hourHeavenElement = eightChar.getHour().getHeavenStem().getElement().getName()
+  const hourEarthElement = eightChar.getHour().getEarthBranch().getElement().getName()
+  
+  return {
+    year: `${yearHeavenElement}${yearEarthElement}年`,
+    month: `${monthHeavenElement}${monthEarthElement}月`,
+    day: `${dayHeavenElement}${dayEarthElement}日`,
+    hour: `${hourHeavenElement}${hourEarthElement}时`
   }
 }
 
@@ -1049,7 +1102,12 @@ export function getSoundAnalysis(date: Date) {
   
   const getSoundInfo = (sound: any): SoundInfo => {
     const name = sound.getName()
-    const element = sound.getElement().getName()
+    // 修复：Sound对象可能没有getElement方法，直接使用name
+    const element = name.includes('金') ? '金' : 
+                   name.includes('木') ? '木' : 
+                   name.includes('水') ? '水' : 
+                   name.includes('火') ? '火' : 
+                   name.includes('土') ? '土' : '未知'
     
     return {
       name,
@@ -1199,6 +1257,9 @@ export function getCompleteEightCharInfo(birthTime: Date, gender: 'MAN' | 'WOMAN
     
     // 十神分析
     tenStarAnalysis: getTenStarAnalysis(birthTime),
+    
+    // 五行分析
+    elementAnalysis: getElementAnalysis(birthTime),
     
     // 藏干分析
     hideHeavenStemAnalysis: getHideHeavenStemAnalysis(birthTime),
