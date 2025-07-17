@@ -1,0 +1,116 @@
+'use client'
+
+import { useState } from 'react'
+import { Heading } from '@/components/ui/heading'
+import { Text } from '@/components/ui/text'
+import { 
+  findPeachBlossoms, 
+  calculateWeeklyPeachBlossomFortune,
+  type PeachBlossomResult,
+  type WeeklyPeachBlossomFortune 
+} from '@/lib/peach-blossom-fortune'
+import { PeachBlossomForm } from '@/components/peach-blossom/PeachBlossomForm'
+import { PeachBlossomResultComponent } from '@/components/peach-blossom/PeachBlossomResult'
+import { WeeklyFortune } from '@/components/peach-blossom/WeeklyFortune'
+import { PeachBlossomSuggestions } from '@/components/peach-blossom/PeachBlossomSuggestions'
+import { HeartIcon } from '@heroicons/react/24/outline'
+
+interface UserInput {
+  birthDate: Date
+  birthTime: string
+  gender: 'male' | 'female'
+  name: string
+  dateType: 'solar' | 'lunar'
+}
+
+export default function PeachBlossomPage() {
+  const [result, setResult] = useState<PeachBlossomResult | null>(null)
+  const [weeklyFortune, setWeeklyFortune] = useState<WeeklyPeachBlossomFortune | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserInput | null>(null)
+
+  const handleCalculate = async (userInput: UserInput) => {
+    setIsLoading(true)
+    setCurrentUser(userInput)
+    
+    try {
+      // 模拟计算过程
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // 这里使用Date对象而不是字符串
+      const birthDate = userInput.birthDate
+      const [hour, minute] = userInput.birthTime.split(':').map(Number)
+      const birthTime = { hour, minute }
+      
+      const peachBlossomResult = findPeachBlossoms(birthDate, birthTime)
+      const weeklyResult = calculateWeeklyPeachBlossomFortune(birthDate, birthTime)
+      
+      setResult(peachBlossomResult)
+      setWeeklyFortune(weeklyResult)
+    } catch (error) {
+      console.error('计算桃花运失败:', error)
+      alert('计算失败，请重试')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetCalculation = () => {
+    setResult(null)
+    setWeeklyFortune(null)
+    setCurrentUser(null)
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* 页面标题 */}
+      <div className="text-center">
+        <Heading className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+          桃花运测算
+        </Heading>
+        <Text className="mt-4 text-gray-600 max-w-2xl mx-auto">
+          基于传统八字命理学，为您深度分析桃花运势，预测感情机遇，助您把握爱情良缘
+        </Text>
+      </div>
+
+      {!result ? (
+        // 输入表单
+        <div className="max-w-2xl mx-auto">
+          <PeachBlossomForm onSubmit={handleCalculate} isLoading={isLoading} />
+        </div>
+      ) : (
+        // 结果展示
+        <div className="space-y-8">
+          {/* 桃花运分析结果 */}
+          <PeachBlossomResultComponent 
+            result={result} 
+            userName={currentUser?.name} 
+          />
+
+          {/* 每周桃花运指数 */}
+          <WeeklyFortune 
+            fortune={weeklyFortune} 
+            userName={currentUser?.name} 
+          />
+
+          {/* 桃花运提升建议 */}
+          <PeachBlossomSuggestions 
+            result={result} 
+            userName={currentUser?.name} 
+          />
+
+          {/* 重新测算按钮 */}
+          <div className="text-center">
+            <button
+              onClick={resetCalculation}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 transform hover:scale-105 flex items-center gap-2 mx-auto"
+            >
+              <HeartIcon className="w-5 h-5" />
+              重新测算
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+} 

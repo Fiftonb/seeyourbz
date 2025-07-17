@@ -22,7 +22,7 @@ export default function Home() {
       {/* 欢迎标题区域 */}
       <div className="text-center space-y-4">
         <Heading level={1} className="text-4xl font-bold text-gray-900 dark:text-white">
-          欢迎来到 今日如何
+          欢迎来到 今夕何时
         </Heading>
         <Text className="text-xl text-gray-600 dark:text-gray-400">
           一个学习传统文化的工具站
