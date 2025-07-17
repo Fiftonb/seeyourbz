@@ -28,9 +28,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { label: '首页', url: '/' },
-  { label: '命理', url: '/destiny' },
   { label: '黄历', url: '/almanac' },
-  { label: '设置', url: '/settings' },
+  { label: '星座', url: '/constellation' },
+  { label: '命理', url: '/destiny' },
 ]
 
 function TeamDropdownMenu() {
@@ -43,7 +43,7 @@ function TeamDropdownMenu() {
       <DropdownDivider />
       <DropdownItem href={"/" as any}>
         <Avatar slot="icon" initials="SB" className="bg-blue-500 text-white !size-4" />
-        <DropdownLabel>SeeYourBz</DropdownLabel>
+        <DropdownLabel>今日如何</DropdownLabel>
       </DropdownItem>
       <DropdownItem href={"/demo" as any}>
         <Avatar slot="icon" initials="Demo" className="bg-purple-500 text-white !size-4" />
@@ -118,7 +118,7 @@ export function AppLayout({
         <Navbar>
           <NavbarItem href={"/" as any} className="max-lg:hidden">
             <Avatar initials="SB" className="bg-blue-500 text-white !size-5" />
-            <NavbarLabel>SeeYourBz</NavbarLabel>
+            <NavbarLabel>今日如何</NavbarLabel>
           </NavbarItem>
           <NavbarDivider className="max-lg:hidden" />
           <NavbarSection className="max-lg:hidden">
@@ -150,7 +150,7 @@ export function AppLayout({
           <SidebarHeader>
             <div className="flex items-center gap-3 px-2 py-2.5">
               <Avatar initials="SB" className="bg-blue-500 text-white !size-6" />
-              <SidebarLabel>SeeYourBz</SidebarLabel>
+              <SidebarLabel>今日如何</SidebarLabel>
             </div>
           </SidebarHeader>
           <SidebarBody>

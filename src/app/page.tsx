@@ -4,19 +4,25 @@ import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/divider'
+import { getSimpleConstellationFortune, scoreToStars, getScoreColor, type ConstellationType } from '@/lib/constellation-fortune'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function Home() {
   const today = SolarDay.fromYmd(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())
   const lunarDay = today.getLunarDay()
   const constellation = today.getConstellation()
   const term = today.getTerm()
+  
+  // 获取星座运势信息
+  const constellationFortune = getSimpleConstellationFortune(constellation.getName() as ConstellationType)
 
   return (
     <div className="space-y-8">
       {/* 欢迎标题区域 */}
       <div className="text-center space-y-4">
         <Heading level={1} className="text-4xl font-bold text-gray-900 dark:text-white">
-          欢迎来到 SeeYourBz
+          欢迎来到 今日如何
         </Heading>
         <Text className="text-xl text-gray-600 dark:text-gray-400">
           一个学习传统文化的工具站
@@ -105,15 +111,47 @@ export default function Home() {
             <div className="space-y-3">
               <div>
                 <Text className="text-sm text-gray-600 dark:text-gray-400">当前星座</Text>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {constellation.toString()}
+                <div className="flex items-center space-x-2">
+                  <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {constellation.toString()}
+                  </Text>
+                  <Text className={`text-lg font-medium ${getScoreColor(constellationFortune.score)}`}>
+                    {scoreToStars(constellationFortune.score)}
+                  </Text>
+                </div>
+              </div>
+              <div>
+                <Text className="text-sm text-gray-600 dark:text-gray-400">今日运势</Text>
+                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {constellationFortune.description}
                 </Text>
               </div>
               <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">提示</Text>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">
-                  今日运势良好，适合处理重要事务
+                <Text className="text-sm text-gray-600 dark:text-gray-400">运势建议</Text>
+                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {constellationFortune.suggestion}
                 </Text>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400">幸运色</Text>
+                    <Badge color="zinc" className="text-xs">
+                      {constellationFortune.luckyColor}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400">运势评分</Text>
+                    <Text className={`text-sm font-semibold ${getScoreColor(constellationFortune.score)}`}>
+                      {constellationFortune.score}/5
+                    </Text>
+                  </div>
+                </div>
+                <Link href="/constellation">
+                  <Button outline className="text-xs py-1 px-2">
+                    查看详情
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

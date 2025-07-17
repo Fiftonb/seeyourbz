@@ -11,7 +11,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'SeeYourBz - 日历应用',
+  title: '今日如何 - 日历应用',
   description: '基于tyme4ts的强大日历应用',
 }
 
