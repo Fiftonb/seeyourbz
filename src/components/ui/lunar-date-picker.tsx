@@ -21,6 +21,9 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
   const [lunarMonth, setLunarMonth] = useState<number>(1)
   const [lunarDay, setLunarDay] = useState<number>(1)
   
+  // 年份输入框的临时输入状态
+  const [yearInput, setYearInput] = useState<string>('2024')
+  
   // 当前年份的月份信息
   const [monthsInYear, setMonthsInYear] = useState<Array<{
     month: number
@@ -57,6 +60,7 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
       setLunarYear(lunarYear.getYear())
       setLunarMonth(lunarMonth.getMonth())
       setLunarDay(lunarDay.getDay())
+      setYearInput(lunarYear.getYear().toString())
       setIsInitialized(true)
     } catch (error) {
       console.error('初始化农历日期失败:', error)
@@ -207,7 +211,11 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
           <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <Button
               plain
-              onClick={() => setLunarYear(prev => prev - 1)}
+              onClick={() => {
+                const newYear = lunarYear - 1
+                setLunarYear(newYear)
+                setYearInput(newYear.toString())
+              }}
               className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
             >
               <ChevronLeftIcon className="size-4" />
@@ -222,23 +230,42 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    value={lunarYear}
+                    value={yearInput}
                     onChange={(e) => {
-                      const year = parseInt(e.target.value)
-                      const currentYear = new Date().getFullYear()
-                      const minYear = currentYear - 99 // 最近100年
-                      
-                      if (!isNaN(year) && year >= minYear && year <= currentYear) {
-                        setLunarYear(year)
+                      const value = e.target.value
+                      // 只允许数字输入，最多4位
+                      if (/^\d{0,4}$/.test(value)) {
+                        setYearInput(value)
                       }
                     }}
                     onBlur={(e) => {
-                      const year = parseInt(e.target.value)
+                      const value = e.target.value
+                      const year = parseInt(value)
                       const currentYear = new Date().getFullYear()
                       const minYear = currentYear - 99
                       
-                      if (isNaN(year) || year < minYear || year > currentYear) {
-                        setLunarYear(currentYear)
+                      // 失焦时验证并修正年份
+                      if (value === '' || isNaN(year) || year < minYear || year > currentYear) {
+                        const correctedYear = currentYear
+                        setLunarYear(correctedYear)
+                        setYearInput(correctedYear.toString())
+                      } else {
+                        setLunarYear(year)
+                        setYearInput(year.toString())
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // 允许删除、方向键等控制键
+                      if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                        return
+                      }
+                      // 只允许数字输入
+                      if (!/^\d$/.test(e.key)) {
+                        e.preventDefault()
+                      }
+                      // 限制最大长度为4位
+                      if (e.currentTarget.value.length >= 4 && /^\d$/.test(e.key)) {
+                        e.preventDefault()
                       }
                     }}
                     className="w-16 h-8 px-2 py-1 text-center text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:border-red-500 dark:focus:border-red-400 focus:ring-1 focus:ring-red-500 dark:focus:ring-red-400 transition-all"
@@ -282,7 +309,11 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
             
             <Button
               plain
-              onClick={() => setLunarYear(prev => prev + 1)}
+              onClick={() => {
+                const newYear = lunarYear + 1
+                setLunarYear(newYear)
+                setYearInput(newYear.toString())
+              }}
               className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
             >
               <ChevronRightIcon className="size-4" />
@@ -334,6 +365,7 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
                   setLunarYear(lunarYear.getYear())
                   setLunarMonth(lunarMonth.getMonth())
                   setLunarDay(lunarDay.getDay())
+                  setYearInput(lunarYear.getYear().toString())
                   setIsOpen(false)
                 } catch (error) {
                   console.error('重置今天失败:', error)
