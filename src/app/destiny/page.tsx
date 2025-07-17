@@ -109,13 +109,43 @@ export default function DestinyPage() {
       
       setStructuredResult(structuredData)
       setCalculationResult(resultText)
+
+      // 记录用户提交信息
+      try {
+        const response = await fetch('/api/submissions/record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'destiny',
+            inputData: {
+              birthDate: selectedDate.toISOString(),
+              birthTime: timeInput,
+              gender: gender,
+              startAge: startAge,
+              dateType: dateType
+            },
+            resultData: {
+              eightCharInfo: structuredData,
+              calculationResult: resultText.substring(0, 1000) // 只保存前1000字符避免数据过大
+            }
+          }),
+        })
+        
+        if (!response.ok) {
+          console.warn('记录提交信息失败')
+        }
+      } catch (recordError) {
+        console.warn('记录提交信息时出错:', recordError)
+      }
     } catch (error) {
       console.error('计算出错:', error)
       setCalculationResult(`计算出错: ${error instanceof Error ? error.message : '未知错误'}`)
     } finally {
       setIsCalculating(false)
     }
-  }, [selectedDate, timeInput, gender, startAge])
+  }, [selectedDate, timeInput, gender, startAge, dateType])
 
   // 格式化结果为结构化数据
   const formatResult = (info: any) => {

@@ -32,47 +32,15 @@ export default function ConstellationPage() {
     getTodayConstellationFortune(currentConstellation)
   )
 
-  // 页面加载时记录初始查看
-  useEffect(() => {
-    recordConstellationView(currentConstellation)
-  }, [])
+
 
   // 处理星座选择变化
   const handleConstellationChange = (constellation: ConstellationType) => {
     setSelectedConstellation(constellation)
     setFortune(getTodayConstellationFortune(constellation))
-    
-    // 记录用户查看星座运势的行为
-    recordConstellationView(constellation)
   }
 
-  // 记录用户查看星座运势
-  const recordConstellationView = async (constellation: ConstellationType) => {
-    try {
-      const response = await fetch('/api/submissions/record', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'constellation',
-          inputData: {
-            constellation,
-            date: new Date().toISOString()
-          },
-          resultData: {
-            fortune: getTodayConstellationFortune(constellation)
-          }
-        }),
-      })
-      
-      if (!response.ok) {
-        console.warn('记录星座查看信息失败')
-      }
-    } catch (error) {
-      console.warn('记录星座查看信息时出错:', error)
-    }
-  }
+
 
   // 运势卡片组件
   const FortuneCard = ({ 

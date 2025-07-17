@@ -41,7 +41,7 @@ model CalendarEvent {
 
 model UserSubmission {
   id            String   @id @default(cuid())
-  type          String   // 'constellation' 或 'peach-blossom'
+  type          String   // 'peach-blossom' 或 'destiny'
   ipAddress     String   // 用户IP地址
   userAgent     String?  // 用户浏览器信息
   inputData     String   // JSON格式的输入数据

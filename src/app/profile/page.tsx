@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Field, Label } from '@/components/ui/fieldset'
-import { UserIcon, EnvelopeIcon, CalendarDaysIcon } from '@heroicons/react/16/solid'
+import { UserIcon, EnvelopeIcon, CalendarDaysIcon, LockClosedIcon } from '@heroicons/react/16/solid'
 
 interface UserProfile {
   id: string
@@ -24,6 +23,24 @@ export default function ProfilePage() {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  
+  // 密码修改相关状态
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+  
+  // 邮箱修改相关状态
+  const [changingEmail, setChangingEmail] = useState(false)
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailPassword, setEmailPassword] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [emailSuccess, setEmailSuccess] = useState('')
+  
   const router = useRouter()
 
   useEffect(() => {
@@ -82,6 +99,81 @@ export default function ProfilePage() {
     }
   }
 
+  const handlePasswordChange = async () => {
+    setPasswordSaving(true)
+    setPasswordError('')
+    setPasswordSuccess('')
+    
+    try {
+      const response = await fetch('/api/user/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          currentPassword, 
+          newPassword, 
+          confirmPassword 
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || '修改密码失败')
+      }
+
+      // 清空表单并显示成功消息
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setChangingPassword(false)
+      setPasswordSuccess('密码修改成功')
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : '修改密码失败')
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
+  const handleEmailChange = async () => {
+    setEmailSaving(true)
+    setEmailError('')
+    setEmailSuccess('')
+    
+    try {
+      const response = await fetch('/api/user/change-email', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          newEmail, 
+          currentPassword: emailPassword 
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || '修改邮箱失败')
+      }
+
+      const data = await response.json()
+      
+      // 更新用户信息
+      setUser(data.user)
+      
+      // 清空表单并显示成功消息
+      setNewEmail('')
+      setEmailPassword('')
+      setChangingEmail(false)
+      setEmailSuccess('邮箱修改成功')
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : '修改邮箱失败')
+    } finally {
+      setEmailSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -134,6 +226,20 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* 密码修改成功消息 */}
+      {passwordSuccess && (
+        <div className="p-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+          {passwordSuccess}
+        </div>
+      )}
+
+      {/* 邮箱修改成功消息 */}
+      {emailSuccess && (
+        <div className="p-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+          {emailSuccess}
+        </div>
+      )}
+
       {/* 个人信息卡片 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
         <div className="p-6">
@@ -147,12 +253,12 @@ export default function ProfilePage() {
               </Heading>
             </div>
             
-            {!editing && (
+            {!editing && !changingEmail && (
               <button 
                 onClick={() => setEditing(true)} 
                 className="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
               >
-                编辑
+                编辑用户名
               </button>
             )}
           </div>
@@ -165,12 +271,13 @@ export default function ProfilePage() {
                 <span>用户名</span>
               </Label>
               {editing ? (
-                <Input
+                <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="请输入用户名"
                   disabled={saving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               ) : (
                 <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
@@ -179,17 +286,27 @@ export default function ProfilePage() {
               )}
             </Field>
 
-            {/* 邮箱（只读） */}
+            {/* 邮箱 */}
             <Field>
               <Label className="flex items-center space-x-2">
                 <EnvelopeIcon className="w-4 h-4" />
                 <span>邮箱</span>
               </Label>
-              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <Text>{user.email}</Text>
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <Text>{user.email}</Text>
+                </div>
+                {!changingEmail && !editing && (
+                  <button 
+                    onClick={() => setChangingEmail(true)} 
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-2 rounded transition-colors duration-200"
+                  >
+                    修改
+                  </button>
+                )}
               </div>
               <Text className="text-xs text-gray-500 mt-1">
-                邮箱地址无法修改
+                修改邮箱需要输入当前密码验证身份
               </Text>
             </Field>
 
@@ -227,6 +344,218 @@ export default function ProfilePage() {
               >
                 取消
               </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 邮箱修改卡片 */}
+      {changingEmail && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                  <EnvelopeIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <Heading level={2} className="text-lg font-semibold">
+                  修改邮箱
+                </Heading>
+              </div>
+            </div>
+
+            {/* 邮箱修改错误消息 */}
+            {emailError && (
+              <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 mb-4">
+                {emailError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* 当前邮箱显示 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <EnvelopeIcon className="w-4 h-4" />
+                  <span>当前邮箱</span>
+                </Label>
+                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <Text>{user.email}</Text>
+                </div>
+              </Field>
+
+              {/* 新邮箱 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <EnvelopeIcon className="w-4 h-4" />
+                  <span>新邮箱</span>
+                </Label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="请输入新的邮箱地址"
+                  disabled={emailSaving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </Field>
+
+              {/* 验证密码 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <LockClosedIcon className="w-4 h-4" />
+                  <span>验证密码</span>
+                </Label>
+                <input
+                  type="password"
+                  value={emailPassword}
+                  onChange={(e) => setEmailPassword(e.target.value)}
+                  placeholder="请输入当前密码验证身份"
+                  disabled={emailSaving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <Text className="text-xs text-gray-500 mt-1">
+                  为了您的账户安全，修改邮箱需要验证当前密码
+                </Text>
+              </Field>
+
+              {/* 邮箱修改按钮 */}
+              <div className="flex space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handleEmailChange}
+                  disabled={emailSaving || !newEmail || !emailPassword}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                >
+                  {emailSaving ? '修改中...' : '确认修改'}
+                </button>
+                <button
+                  onClick={() => {
+                    setChangingEmail(false)
+                    setNewEmail('')
+                    setEmailPassword('')
+                    setEmailError('')
+                    setEmailSuccess('')
+                  }}
+                  disabled={emailSaving}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 密码修改卡片 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
+                <LockClosedIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <Heading level={2} className="text-lg font-semibold">
+                修改密码
+              </Heading>
+            </div>
+            
+            {!changingPassword && !editing && !changingEmail && (
+              <button 
+                onClick={() => setChangingPassword(true)} 
+                className="text-sm bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                修改密码
+              </button>
+            )}
+          </div>
+
+          {/* 密码修改错误消息 */}
+          {passwordError && (
+            <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 mb-4">
+              {passwordError}
+            </div>
+          )}
+
+          {changingPassword ? (
+            <div className="space-y-4">
+              {/* 当前密码 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <LockClosedIcon className="w-4 h-4" />
+                  <span>当前密码</span>
+                </Label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="请输入当前密码"
+                  disabled={passwordSaving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </Field>
+
+              {/* 新密码 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <LockClosedIcon className="w-4 h-4" />
+                  <span>新密码</span>
+                </Label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="请输入新密码（至少6位）"
+                  disabled={passwordSaving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </Field>
+
+              {/* 确认新密码 */}
+              <Field>
+                <Label className="flex items-center space-x-2">
+                  <LockClosedIcon className="w-4 h-4" />
+                  <span>确认新密码</span>
+                </Label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="请再次输入新密码"
+                  disabled={passwordSaving}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </Field>
+
+              {/* 密码修改按钮 */}
+              <div className="flex space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                >
+                  {passwordSaving ? '修改中...' : '确认修改'}
+                </button>
+                <button
+                  onClick={() => {
+                    setChangingPassword(false)
+                    setCurrentPassword('')
+                    setNewPassword('')
+                    setConfirmPassword('')
+                    setPasswordError('')
+                    setPasswordSuccess('')
+                  }}
+                  disabled={passwordSaving}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <Text className="text-gray-600 dark:text-gray-400">
+                为了您的账户安全，建议定期更换密码
+              </Text>
             </div>
           )}
         </div>

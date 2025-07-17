@@ -119,10 +119,10 @@ export default function AdminSubmissionsPage() {
   // 获取类型显示文本
   const getTypeText = (type: string) => {
     switch (type) {
-      case 'constellation':
-        return '星座运势'
       case 'peach-blossom':
         return '桃花运'
+      case 'destiny':
+        return '八字排盘'
       default:
         return type
     }
@@ -131,10 +131,10 @@ export default function AdminSubmissionsPage() {
   // 获取类型颜色
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
-      case 'constellation':
-        return 'purple'
       case 'peach-blossom':
         return 'pink'
+      case 'destiny':
+        return 'blue'
       default:
         return 'zinc'
     }
@@ -192,8 +192,8 @@ export default function AdminSubmissionsPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">全部类型</option>
-              <option value="constellation">星座运势</option>
               <option value="peach-blossom">桃花运</option>
+              <option value="destiny">八字排盘</option>
             </select>
           </div>
           

@@ -6,6 +6,15 @@ export async function POST(request: NextRequest) {
   try {
     const { type, inputData, resultData } = await request.json()
 
+    // 验证提交类型
+    const allowedTypes = ['peach-blossom', 'destiny']
+    if (!allowedTypes.includes(type)) {
+      return NextResponse.json(
+        { error: '不支持的提交类型' },
+        { status: 400 }
+      )
+    }
+
     // 获取用户IP地址
     const forwarded = request.headers.get('x-forwarded-for')
     const ipAddress = forwarded ? forwarded.split(',')[0] : 
