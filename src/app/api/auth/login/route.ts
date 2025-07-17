@@ -29,8 +29,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 创建session
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    // 设置固定的过期时间：7天
+    const expiresIn = 7 * 24 * 60 * 60 * 1000
+    const expires = new Date(Date.now() + expiresIn)
+    
     const session = await encrypt({ 
       user: { id: user.id, email: user.email, name: user.name }, 
       expires 

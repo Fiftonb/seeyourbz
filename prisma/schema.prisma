@@ -15,8 +15,11 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  submissions UserSubmission[]
 
   @@map("users")
 }
@@ -34,4 +37,19 @@ model CalendarEvent {
 
   @@unique([title, userId])
   @@map("calendar_events")
+}
+
+model UserSubmission {
+  id            String   @id @default(cuid())
+  type          String   // 'constellation' 或 'peach-blossom'
+  ipAddress     String   // 用户IP地址
+  userAgent     String?  // 用户浏览器信息
+  inputData     String   // JSON格式的输入数据
+  resultData    String?  // JSON格式的计算结果（可选）
+  userId        String?  // 关联用户ID（如果已登录）
+  createdAt     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("user_submissions")
 } 

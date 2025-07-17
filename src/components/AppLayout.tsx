@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Avatar } from '@/components/ui/avatar'
+import { LogoIcon } from '@/components/ui/logo'
 import {
   Dropdown,
   DropdownButton,
@@ -13,6 +15,7 @@ import {
 import { Navbar, NavbarDivider, NavbarItem, NavbarLabel, NavbarSection, NavbarSpacer } from '@/components/ui/navbar'
 import { Sidebar, SidebarBody, SidebarHeader, SidebarItem, SidebarLabel, SidebarSection } from '@/components/ui/sidebar'
 import { StackedLayout } from '@/components/ui/stacked-layout'
+import { Button } from '@/components/ui/button'
 import {
   ArrowRightStartOnRectangleIcon,
   ChevronDownIcon,
@@ -43,7 +46,7 @@ function TeamDropdownMenu() {
       </DropdownItem>
       <DropdownDivider />
       <DropdownItem href={"/" as any}>
-        <Avatar slot="icon" initials="SB" className="bg-blue-500 text-white !size-4" />
+        <LogoIcon className="!size-4" />
         <DropdownLabel>今夕何时</DropdownLabel>
       </DropdownItem>
       <DropdownItem href={"/demo" as any}>
@@ -59,7 +62,7 @@ function TeamDropdownMenu() {
   )
 }
 
-function UserDropdownMenu() {
+function UserDropdownMenu({ user, onLogout }: { user: any, onLogout: () => void }) {
   return (
     <DropdownMenu className="min-w-64" anchor="bottom end">
       <DropdownItem href={"/profile" as any}>
@@ -80,7 +83,7 @@ function UserDropdownMenu() {
         <DropdownLabel>意见反馈</DropdownLabel>
       </DropdownItem>
       <DropdownDivider />
-      <DropdownItem href={"/logout" as any}>
+      <DropdownItem onClick={onLogout}>
         <ArrowRightStartOnRectangleIcon />
         <DropdownLabel>退出登录</DropdownLabel>
       </DropdownItem>
@@ -94,7 +97,45 @@ export function AppLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isLoaded, setIsLoaded] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  // 检查用户登录状态
+  useEffect(() => {
+    checkUserAuth()
+  }, [])
+
+  const checkUserAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me')
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData.user)
+      }
+    } catch (error) {
+      console.error('检查登录状态失败:', error)
+    } finally {
+      setCheckingAuth(false)
+    }
+  }
+
+  // 处理退出登录
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        setUser(null)
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error('退出登录失败:', error)
+    }
+  }
 
   // 防止初始加载时的动画闪烁
   useEffect(() => {
@@ -118,7 +159,7 @@ export function AppLayout({
       navbar={
         <Navbar>
           <NavbarItem href={"/" as any} className="max-lg:hidden">
-            <Avatar initials="SB" className="bg-blue-500 text-white !size-5" />
+            <LogoIcon className="!size-5" />
             <NavbarLabel>今夕何时</NavbarLabel>
           </NavbarItem>
           <NavbarDivider className="max-lg:hidden" />
@@ -137,12 +178,27 @@ export function AppLayout({
             <NavbarItem href={"/inbox" as any} aria-label="收件箱">
               <InboxIcon />
             </NavbarItem>
-            <Dropdown>
-              <DropdownButton as={NavbarItem}>
-                <Avatar initials="用户" className="bg-gray-500 text-white !size-5" square />
-              </DropdownButton>
-              <UserDropdownMenu />
-            </Dropdown>
+            {!checkingAuth && (
+              user ? (
+                <Dropdown>
+                  <DropdownButton as={NavbarItem}>
+                    <Avatar 
+                      initials={user?.name ? user.name.slice(0, 1) : "用户"} 
+                      className="bg-gray-500 text-white !size-5" 
+                      square 
+                    />
+                  </DropdownButton>
+                  <UserDropdownMenu user={user} onLogout={handleLogout} />
+                </Dropdown>
+              ) : (
+                <a 
+                  href="/login"
+                  className="bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-sm ml-2 inline-flex items-center justify-center"
+                >
+                  登录
+                </a>
+              )
+            )}
           </NavbarSection>
         </Navbar>
       }
@@ -150,7 +206,7 @@ export function AppLayout({
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-3 px-2 py-2.5">
-              <Avatar initials="SB" className="bg-blue-500 text-white !size-6" />
+              <LogoIcon className="!size-6" />
               <SidebarLabel>今夕何时</SidebarLabel>
             </div>
           </SidebarHeader>

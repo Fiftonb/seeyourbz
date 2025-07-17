@@ -47,6 +47,36 @@ export default function PeachBlossomPage() {
       
       setResult(peachBlossomResult)
       setWeeklyFortune(weeklyResult)
+
+      // 记录用户提交信息
+      try {
+        const response = await fetch('/api/submissions/record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'peach-blossom',
+            inputData: {
+              birthDate: userInput.birthDate.toISOString(),
+              birthTime: userInput.birthTime,
+              gender: userInput.gender,
+              name: userInput.name,
+              dateType: userInput.dateType
+            },
+            resultData: {
+              peachBlossomResult,
+              weeklyResult
+            }
+          }),
+        })
+        
+        if (!response.ok) {
+          console.warn('记录提交信息失败')
+        }
+      } catch (recordError) {
+        console.warn('记录提交信息时出错:', recordError)
+      }
     } catch (error) {
       console.error('计算桃花运失败:', error)
       alert('计算失败，请重试')

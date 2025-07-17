@@ -113,7 +113,7 @@ npm run db:seed
 npm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看应用。
+打开 [http://localhost:12333](http://localhost:12333) 查看应用。
 
 ## 项目结构
 

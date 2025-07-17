@@ -1,14 +1,8 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
+import './fonts.css'
 import { AppLayout } from '@/components/AppLayout'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap',
-  fallback: ['system-ui', '-apple-system', 'sans-serif'],
-  preload: true
-})
+import { interFont } from '@/lib/fonts'
 
 export const metadata: Metadata = {
   title: '今夕何时 - 日历应用',
@@ -22,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" className="bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950">
-      <body className={`${inter.className} font-sans antialiased`}>
+      <body className={`${interFont.className} font-sans antialiased`}>
         <AppLayout>{children}</AppLayout>
       </body>
     </html>
