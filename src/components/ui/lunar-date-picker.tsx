@@ -111,17 +111,27 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
 
   // 处理外部点击关闭弹出层
   useEffect(() => {
+    if (!isOpen) return
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      // 确保组件仍然存在且事件目标有效
+      if (!containerRef.current || !event.target) {
+        return
+      }
+      
+      // 检查点击是否在组件外部
+      if (!containerRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
 
-    if (isOpen) {
+    // 延迟添加事件监听器，避免立即触发
+    const timeoutId = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside)
-    }
+    }, 0)
 
     return () => {
+      clearTimeout(timeoutId)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen])

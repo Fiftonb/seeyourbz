@@ -173,13 +173,8 @@ input[type="number"] {
 /* 日期时间输入框 - 简化样式 */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
   cursor: pointer;
+  /* 保持原生图标的正常显示和事件处理 */
 }
 
 /* 日期时间输入框内部元素 */
