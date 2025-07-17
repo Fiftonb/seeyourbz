@@ -16,7 +16,6 @@
 /build
 
 # misc
-.DS_Store
 *.pem
 
 # debug
@@ -41,4 +40,76 @@ next-env.d.ts
 
 # IDE
 .vscode/
-.idea/ 
+.idea/
+
+# 数据库备份文件
+/prisma/backups/
+*.db.backup
+*.sql.backup
+
+# 临时备份文件
+*.backup
+*.bak
+*.tmp
+
+# 系统特定文件
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 日志文件
+logs/
+*.log
+*.log.*
+
+# 运行时文件
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# 编辑器临时文件
+.swp
+.swo
+*~
+
+# 测试和开发文件
+test.db
+test-*.db
+dev-backup-*.db
+*.test.sql
+
+# 脚本生成的临时文件
+scripts/temp/
+scripts/*.tmp
+scripts/*.log
+
+# 平台特定的可执行文件
+*.exe
+*.dmg
+*.pkg
+*.deb
+*.rpm
+
+# 压缩文件（可能的备份）
+*.zip
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
+
+# 性能和调试文件
+*.prof
+*.trace
+*.heap
+coverage/

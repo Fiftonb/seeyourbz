@@ -10,7 +10,15 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:backup": "mkdir -p prisma/backups && cp prisma/dev.db prisma/backups/dev-$(date +%Y%m%d-%H%M%S).db && echo 'Database backed up to prisma/backups/'",
+    "db:backup:dump": "mkdir -p prisma/backups && sqlite3 prisma/dev.db .dump > prisma/backups/dump-$(date +%Y%m%d-%H%M%S).sql",
+    "db:restore": "echo 'Please specify backup file: npm run db:restore:file -- <backup-file>'",
+    "db:restore:file": "cp",
+    "db:reset": "rm -f prisma/dev.db && npm run db:push && npm run db:seed",
+    "db:backup:clean": "find prisma/backups -name '*.db' -mtime +30 -delete 2>/dev/null || true && find prisma/backups -name '*.sql' -mtime +30 -delete 2>/dev/null || true",
+    "db:backup:linux": "./scripts/backup-db-linux.sh",
+    "db:backup:macos": "./scripts/backup-db.sh"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
