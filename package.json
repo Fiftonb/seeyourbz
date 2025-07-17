@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 12333",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 12333",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",

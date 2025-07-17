@@ -66,7 +66,7 @@ export function PaginationPage({
 }: React.PropsWithChildren<{ href: string; className?: string; current?: boolean }>) {
   return (
     <Button
-      href={href}
+      href={href as any}
       plain
       aria-label={`Page ${children}`}
       aria-current={current ? 'page' : undefined}

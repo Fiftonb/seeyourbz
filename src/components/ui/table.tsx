@@ -111,7 +111,7 @@ export function TableCell({ className, children, ...props }: React.ComponentProp
       {href && (
         <Link
           data-row-link
-          href={href}
+          href={href as any}
           target={target}
           aria-label={title}
           tabIndex={cellRef?.previousElementSibling === null ? 0 : -1}
