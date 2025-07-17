@@ -19,11 +19,10 @@ import { Button } from '@/components/ui/button'
 import {
   ArrowRightStartOnRectangleIcon,
   ChevronDownIcon,
-  Cog8ToothIcon,
-  LightBulbIcon,
   PlusIcon,
   ShieldCheckIcon,
   UserIcon,
+  ChartBarIcon,
 } from '@heroicons/react/16/solid'
 import { InboxIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { usePathname } from 'next/navigation'
@@ -37,30 +36,7 @@ const navItems = [
   { label: '命理', url: '/destiny' },
 ]
 
-function TeamDropdownMenu() {
-  return (
-    <DropdownMenu className="min-w-80 lg:min-w-64" anchor="bottom start">
-      <DropdownItem href={"/settings" as any}>
-        <Cog8ToothIcon />
-        <DropdownLabel>设置</DropdownLabel>
-      </DropdownItem>
-      <DropdownDivider />
-      <DropdownItem href={"/" as any}>
-        <LogoIcon className="!size-4" />
-        <DropdownLabel>今夕何时</DropdownLabel>
-      </DropdownItem>
-      <DropdownItem href={"/demo" as any}>
-        <Avatar slot="icon" initials="Demo" className="bg-purple-500 text-white !size-4" />
-        <DropdownLabel>演示项目</DropdownLabel>
-      </DropdownItem>
-      <DropdownDivider />
-      <DropdownItem href={"/new-project" as any}>
-        <PlusIcon />
-        <DropdownLabel>新建项目&hellip;</DropdownLabel>
-      </DropdownItem>
-    </DropdownMenu>
-  )
-}
+
 
 function UserDropdownMenu({ user, onLogout }: { user: any, onLogout: () => void }) {
   return (
@@ -69,18 +45,19 @@ function UserDropdownMenu({ user, onLogout }: { user: any, onLogout: () => void 
         <UserIcon />
         <DropdownLabel>个人资料</DropdownLabel>
       </DropdownItem>
-      <DropdownItem href={"/settings" as any}>
-        <Cog8ToothIcon />
-        <DropdownLabel>设置</DropdownLabel>
-      </DropdownItem>
+      {user?.isAdmin && (
+        <>
+          <DropdownDivider />
+          <DropdownItem href={"/admin/submissions" as any}>
+            <ChartBarIcon />
+            <DropdownLabel>管理中心</DropdownLabel>
+          </DropdownItem>
+        </>
+      )}
       <DropdownDivider />
       <DropdownItem href={"/privacy" as any}>
         <ShieldCheckIcon />
         <DropdownLabel>隐私政策</DropdownLabel>
-      </DropdownItem>
-      <DropdownItem href={"/feedback" as any}>
-        <LightBulbIcon />
-        <DropdownLabel>意见反馈</DropdownLabel>
       </DropdownItem>
       <DropdownDivider />
       <DropdownItem onClick={onLogout}>
@@ -106,6 +83,13 @@ export function AppLayout({
   useEffect(() => {
     checkUserAuth()
   }, [])
+
+  // 监听路由变化，重新检查用户状态
+  useEffect(() => {
+    if (pathname === '/' || pathname.startsWith('/profile') || pathname.startsWith('/admin')) {
+      checkUserAuth()
+    }
+  }, [pathname])
 
   const checkUserAuth = async () => {
     try {
