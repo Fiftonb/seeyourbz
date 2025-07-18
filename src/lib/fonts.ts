@@ -25,6 +25,6 @@ export const interFont = localFont({
   ],
   display: 'swap',
   variable: '--font-inter',
-  preload: true,
+  preload: false, // 避免预加载所有字体文件
   fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 }); 

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+// 标记此路由为动态路由
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await getSession()

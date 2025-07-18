@@ -4,6 +4,9 @@ import { prisma } from '@/lib/db'
 import { encrypt } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+// 标记此路由为动态路由
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
     cookies().set('session', session, { 
       expires, 
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https'),
       sameSite: 'strict'
     })
 

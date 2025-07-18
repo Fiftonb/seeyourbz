@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
+// 标记此路由为动态路由
+export const dynamic = 'force-dynamic'
+
 export async function PUT(request: NextRequest) {
   try {
     // 验证用户登录状态
