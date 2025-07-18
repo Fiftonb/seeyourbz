@@ -120,6 +120,7 @@ export default function PeachBlossomPage() {
               hour: parseInt(currentUser.birthTime.split(':')[0]), 
               minute: parseInt(currentUser.birthTime.split(':')[1]) 
             } : undefined}
+            onReset={resetCalculation}
           />
 
           {/* 每周桃花运指数 */}
@@ -133,17 +134,6 @@ export default function PeachBlossomPage() {
             result={result} 
             userName={currentUser?.name} 
           />
-
-          {/* 重新测算按钮 */}
-          <div className="text-center">
-            <button
-              onClick={resetCalculation}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 transform hover:scale-105 flex items-center gap-2 mx-auto"
-            >
-              <HeartIcon className="w-5 h-5" />
-              重新测算
-            </button>
-          </div>
         </div>
       )}
     </div>

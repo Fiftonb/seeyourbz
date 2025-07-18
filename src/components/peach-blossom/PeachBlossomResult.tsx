@@ -14,9 +14,10 @@ interface PeachBlossomResultProps {
   userName?: string
   birthDate?: Date
   birthTime?: { hour: number, minute: number }
+  onReset?: () => void
 }
 
-export function PeachBlossomResultComponent({ result, userName, birthDate, birthTime }: PeachBlossomResultProps) {
+export function PeachBlossomResultComponent({ result, userName, birthDate, birthTime, onReset }: PeachBlossomResultProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   
   // 计算本周桃花运指数
@@ -131,8 +132,8 @@ export function PeachBlossomResultComponent({ result, userName, birthDate, birth
         <p className="text-xs text-gray-500 text-center mb-4">
           {result.overallScore ? `基于综合评分 ${result.overallScore}/10` : '基于桃花强度评级'}
         </p>
-        {/* 分享按钮 */}
-        <div className="flex justify-center">
+        {/* 操作按钮 */}
+        <div className="flex justify-center gap-4">
           <button
             onClick={handleShare}
             disabled={isDownloading}
@@ -153,6 +154,15 @@ export function PeachBlossomResultComponent({ result, userName, birthDate, birth
               </>
             )}
           </button>
+          {onReset && (
+            <button
+              onClick={onReset}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-full transition-all duration-200 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+            >
+              <HeartIcon className="w-5 h-5" />
+              重新测算
+            </button>
+          )}
         </div>
       </div>
 
@@ -223,7 +233,7 @@ export function PeachBlossomResultComponent({ result, userName, birthDate, birth
       </div>
 
       {/* 综合桃花评分 */}
-      {result.overallScore && (
+      {result.overallScore > 0 && (
         <div className="mb-8">
           <div className="text-center">
             <div className="text-sm text-gray-600 mb-2">详细评分</div>

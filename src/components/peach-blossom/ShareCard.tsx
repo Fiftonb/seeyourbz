@@ -232,7 +232,7 @@ export function ShareCardContent({ result, weeklyFortune, userName, qrCodeUrl }:
             </svg>
           ))}
         </div>
-        {result.overallScore && (
+        {result.overallScore > 0 && (
           <div style={{ fontSize: '10px', color: '#6b7280', textAlign: 'center', marginTop: '4px' }}>
             {getStars(result.strength, result.overallScore)}星级 ({result.overallScore.toFixed(1)}分)
           </div>
@@ -277,7 +277,7 @@ export function ShareCardContent({ result, weeklyFortune, userName, qrCodeUrl }:
         </div>
 
         {/* 综合评分 */}
-        {result.overallScore && (
+        {result.overallScore > 0 && (
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>综合评分</p>
             <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ec4899' }}>
