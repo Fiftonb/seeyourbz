@@ -13,16 +13,8 @@ export interface EightCharInfo {
   hourPillar: string
 }
 
-// 桃花运结果接口
-export interface PeachBlossomResult {
-  hasPeachBlossom: boolean
-  positions: PeachBlossomPosition[]
-  type: 'inside' | 'outside' | 'mixed' | 'none'
-  strength: 'strong' | 'medium' | 'weak'
-  analysis: string
-  suggestions: string[]
-  eightChar: EightCharInfo  // 新增八字信息
-}
+// 桃花类型枚举
+export type PeachBlossomType = 'xianchi' | 'redPhoenix' | 'heavenlyJoy' | 'bath' | 'redRomance'
 
 // 桃花位置信息
 export interface PeachBlossomPosition {
@@ -31,6 +23,29 @@ export interface PeachBlossomPosition {
   branch: string
   peachBlossomBranch: string
   meaning: string
+  type: PeachBlossomType
+  typeName: string
+  strength: number  // 单个桃花星的强度
+}
+
+// 桃花运结果接口
+export interface PeachBlossomResult {
+  hasPeachBlossom: boolean
+  positions: PeachBlossomPosition[]
+  type: 'inside' | 'outside' | 'mixed' | 'none'
+  strength: 'strong' | 'medium' | 'weak'
+  analysis: string
+  suggestions: string[]
+  eightChar: EightCharInfo
+  // 新增：按类型分组的桃花星
+  peachBlossomTypes: {
+    xianchi: PeachBlossomPosition[]     // 咸池桃花
+    redPhoenix: PeachBlossomPosition[]   // 红鸾桃花
+    heavenlyJoy: PeachBlossomPosition[]  // 天喜桃花
+    bath: PeachBlossomPosition[]         // 沐浴桃花
+    redRomance: PeachBlossomPosition[]   // 红艳桃花
+  }
+  overallScore: number  // 综合桃花运评分 (1-10分)
 }
 
 // 每周桃花运指数
@@ -50,8 +65,8 @@ export interface WeeklyPeachBlossomFortune {
   luckyItems: string[]
 }
 
-// 桃花查找映射表
-const PEACH_BLOSSOM_MAP: Record<string, string> = {
+// 咸池桃花查找映射表（传统桃花）
+const XIANCHI_PEACH_MAP: Record<string, string> = {
   // 寅午戌见卯（火局见木）
   '寅': '卯', '午': '卯', '戌': '卯',
   // 申子辰见酉（水局见金）
@@ -62,16 +77,96 @@ const PEACH_BLOSSOM_MAP: Record<string, string> = {
   '巳': '午', '酉': '午', '丑': '午'
 }
 
-// 桃花强度权重
+// 红鸾桃花映射表（基于生肖，主婚姻喜庆）
+const RED_PHOENIX_MAP: Record<string, string> = {
+  '子': '卯',  // 鼠→兔
+  '丑': '寅',  // 牛→虎
+  '寅': '丑',  // 虎→牛
+  '卯': '子',  // 兔→鼠
+  '辰': '亥',  // 龙→猪
+  '巳': '戌',  // 蛇→狗
+  '午': '酉',  // 马→鸡
+  '未': '申',  // 羊→猴
+  '申': '未',  // 猴→羊
+  '酉': '午',  // 鸡→马
+  '戌': '巳',  // 狗→蛇
+  '亥': '辰'   // 猪→龙
+}
+
+// 天喜桃花映射表（红鸾的对冲，主喜庆吉利）
+const HEAVENLY_JOY_MAP: Record<string, string> = {
+  '子': '酉',  // 鼠→鸡
+  '丑': '申',  // 牛→猴
+  '寅': '未',  // 虎→羊
+  '卯': '午',  // 兔→马
+  '辰': '巳',  // 龙→蛇
+  '巳': '辰',  // 蛇→龙
+  '午': '卯',  // 马→兔
+  '未': '寅',  // 羊→虎
+  '申': '丑',  // 猴→牛
+  '酉': '子',  // 鸡→鼠
+  '戌': '亥',  // 狗→猪
+  '亥': '戌'   // 猪→狗
+}
+
+// 沐浴桃花映射表（基于天干，主多情善感）
+const BATH_PEACH_MAP: Record<string, string> = {
+  '甲': '子',  // 甲木→子水
+  '乙': '巳',  // 乙木→巳火
+  '丙': '卯',  // 丙火→卯木
+  '丁': '申',  // 丁火→申金
+  '戊': '卯',  // 戊土→卯木
+  '己': '申',  // 己土→申金
+  '庚': '午',  // 庚金→午火
+  '辛': '亥',  // 辛金→亥水
+  '壬': '酉',  // 壬水→酉金
+  '癸': '寅'   // 癸水→寅木
+}
+
+// 红艳桃花映射表（基于天干，主激情浪漫）
+const RED_ROMANCE_MAP: Record<string, string> = {
+  '甲': '午',  // 甲木→午火
+  '乙': '申',  // 乙木→申金
+  '丙': '寅',  // 丙火→寅木
+  '丁': '未',  // 丁火→未土
+  '戊': '辰',  // 戊土→辰土
+  '己': '辰',  // 己土→辰土
+  '庚': '戌',  // 庚金→戌土
+  '辛': '酉',  // 辛金→酉金
+  '壬': '子',  // 壬水→子水
+  '癸': '申'   // 癸水→申金
+}
+
+// 扩展的桃花强度权重系统
 const PEACH_BLOSSOM_WEIGHTS = {
-  year: 0.8,   // 年柱桃花影响祖辈、早年
-  month: 1.2,  // 月柱桃花影响父母、青年
-  day: 1.5,    // 日柱桃花影响本人、中年 
-  hour: 1.0    // 时柱桃花影响子女、晚年
+  // 柱位权重
+  pillar: {
+    year: 0.8,   // 年柱：影响祖辈、早年
+    month: 1.2,  // 月柱：影响父母、青年
+    day: 1.5,    // 日柱：影响本人、中年（最重要）
+    hour: 1.0    // 时柱：影响子女、晚年
+  },
+  // 桃花类型权重
+  type: {
+    xianchi: 1.0,      // 咸池桃花：基础权重
+    redPhoenix: 1.3,   // 红鸾桃花：正桃花，权重较高
+    heavenlyJoy: 1.2,  // 天喜桃花：吉利桃花
+    bath: 0.8,         // 沐浴桃花：多情桃花，权重较低
+    redRomance: 0.9    // 红艳桃花：激情桃花
+  }
+}
+
+// 桃花类型中文名称
+const PEACH_BLOSSOM_TYPE_NAMES: Record<PeachBlossomType, string> = {
+  xianchi: '咸池桃花',
+  redPhoenix: '红鸾桃花',
+  heavenlyJoy: '天喜桃花',
+  bath: '沐浴桃花',
+  redRomance: '红艳桃花'
 }
 
 /**
- * 查找八字中的桃花星
+ * 查找八字中的所有桃花星
  */
 export function findPeachBlossoms(
   birthDate: Date,
@@ -99,43 +194,133 @@ export function findPeachBlossoms(
   
   const eightChar = lunarHour.getEightChar()
   
-  // 获取四柱地支
+  // 获取四柱天干地支
   const pillars = {
-    year: eightChar.getYear().getEarthBranch().getName(),
-    month: eightChar.getMonth().getEarthBranch().getName(),
-    day: eightChar.getDay().getEarthBranch().getName(),
-    hour: eightChar.getHour().getEarthBranch().getName()
+    year: {
+      stem: eightChar.getYear().getHeavenStem().getName(),
+      branch: eightChar.getYear().getEarthBranch().getName()
+    },
+    month: {
+      stem: eightChar.getMonth().getHeavenStem().getName(),
+      branch: eightChar.getMonth().getEarthBranch().getName()
+    },
+    day: {
+      stem: eightChar.getDay().getHeavenStem().getName(),
+      branch: eightChar.getDay().getEarthBranch().getName()
+    },
+    hour: {
+      stem: eightChar.getHour().getHeavenStem().getName(),
+      branch: eightChar.getHour().getEarthBranch().getName()
+    }
   }
   
-  // 查找桃花
-  const positions: PeachBlossomPosition[] = []
+  // 存储所有桃花位置
+  const allPositions: PeachBlossomPosition[] = []
   
-  // 以年支和日支为基准查找桃花
-  const baseBranches = [pillars.year, pillars.day]
+  // 按类型分组的桃花星
+  const peachBlossomTypes = {
+    xianchi: [] as PeachBlossomPosition[],
+    redPhoenix: [] as PeachBlossomPosition[],
+    heavenlyJoy: [] as PeachBlossomPosition[],
+    bath: [] as PeachBlossomPosition[],
+    redRomance: [] as PeachBlossomPosition[]
+  }
   
+  // 1. 查找咸池桃花（以年支和日支为基准）
+  const baseBranches = [pillars.year.branch, pillars.day.branch]
   baseBranches.forEach(baseBranch => {
-    const peachBlossomBranch = PEACH_BLOSSOM_MAP[baseBranch]
+    const peachBlossomBranch = XIANCHI_PEACH_MAP[baseBranch]
     if (peachBlossomBranch) {
-      // 检查其他柱是否有桃花
-      Object.entries(pillars).forEach(([pillarName, branch]) => {
-        if (branch === peachBlossomBranch) {
-          positions.push({
-            pillar: pillarName as 'year' | 'month' | 'day' | 'hour',
-            pillarName: pillarName === 'year' ? '年柱' : 
-                       pillarName === 'month' ? '月柱' :
-                       pillarName === 'day' ? '日柱' : '时柱',
-            branch,
+      Object.entries(pillars).forEach(([pillarName, pillarData]) => {
+        if (pillarData.branch === peachBlossomBranch) {
+          const position = createPeachBlossomPosition(
+            pillarName as keyof typeof pillars,
+            pillarData.branch,
             peachBlossomBranch,
-            meaning: getPeachBlossomMeaning(pillarName as any, baseBranch)
-          })
+            'xianchi',
+            baseBranch
+          )
+          allPositions.push(position)
+          peachBlossomTypes.xianchi.push(position)
         }
       })
     }
   })
   
-  // 判断桃花类型
-  const insidePillars = positions.filter(p => p.pillar === 'year' || p.pillar === 'month')
-  const outsidePillars = positions.filter(p => p.pillar === 'day' || p.pillar === 'hour')
+  // 2. 查找红鸾桃花（以年支为基准）
+  const redPhoenixBranch = RED_PHOENIX_MAP[pillars.year.branch]
+  if (redPhoenixBranch) {
+    Object.entries(pillars).forEach(([pillarName, pillarData]) => {
+      if (pillarData.branch === redPhoenixBranch) {
+        const position = createPeachBlossomPosition(
+          pillarName as keyof typeof pillars,
+          pillarData.branch,
+          redPhoenixBranch,
+          'redPhoenix'
+        )
+        allPositions.push(position)
+        peachBlossomTypes.redPhoenix.push(position)
+      }
+    })
+  }
+  
+  // 3. 查找天喜桃花（以年支为基准）
+  const heavenlyJoyBranch = HEAVENLY_JOY_MAP[pillars.year.branch]
+  if (heavenlyJoyBranch) {
+    Object.entries(pillars).forEach(([pillarName, pillarData]) => {
+      if (pillarData.branch === heavenlyJoyBranch) {
+        const position = createPeachBlossomPosition(
+          pillarName as keyof typeof pillars,
+          pillarData.branch,
+          heavenlyJoyBranch,
+          'heavenlyJoy'
+        )
+        allPositions.push(position)
+        peachBlossomTypes.heavenlyJoy.push(position)
+      }
+    })
+  }
+  
+  // 4. 查找沐浴桃花（以日干为基准）
+  const bathBranch = BATH_PEACH_MAP[pillars.day.stem]
+  if (bathBranch) {
+    Object.entries(pillars).forEach(([pillarName, pillarData]) => {
+      if (pillarData.branch === bathBranch) {
+        const position = createPeachBlossomPosition(
+          pillarName as keyof typeof pillars,
+          pillarData.branch,
+          bathBranch,
+          'bath'
+        )
+        allPositions.push(position)
+        peachBlossomTypes.bath.push(position)
+      }
+    })
+  }
+  
+  // 5. 查找红艳桃花（以日干为基准）
+  const redRomanceBranch = RED_ROMANCE_MAP[pillars.day.stem]
+  if (redRomanceBranch) {
+    Object.entries(pillars).forEach(([pillarName, pillarData]) => {
+      if (pillarData.branch === redRomanceBranch) {
+        const position = createPeachBlossomPosition(
+          pillarName as keyof typeof pillars,
+          pillarData.branch,
+          redRomanceBranch,
+          'redRomance'
+        )
+        allPositions.push(position)
+        peachBlossomTypes.redRomance.push(position)
+      }
+    })
+  }
+  
+  // 去重处理（同一柱位可能有多种桃花）
+  const uniquePositions = removeDuplicatePositions(allPositions)
+  
+  // 判断桃花类型（内外桃花）
+  const insidePillars = uniquePositions.filter(p => p.pillar === 'year' || p.pillar === 'month')
+  const outsidePillars = uniquePositions.filter(p => p.pillar === 'day' || p.pillar === 'hour')
   
   let type: PeachBlossomResult['type'] = 'none'
   if (insidePillars.length > 0 && outsidePillars.length > 0) {
@@ -146,31 +331,27 @@ export function findPeachBlossoms(
     type = 'outside'
   }
   
-  // 计算桃花强度
-  const totalWeight = positions.reduce((sum, pos) => {
-    return sum + PEACH_BLOSSOM_WEIGHTS[pos.pillar]
-  }, 0)
-  
-  let strength: PeachBlossomResult['strength'] = 'weak'
-  if (totalWeight >= 2.5) strength = 'strong'
-  else if (totalWeight >= 1.5) strength = 'medium'
+  // 计算综合桃花强度
+  const { strength, overallScore } = calculatePeachBlossomStrength(uniquePositions)
   
   // 生成分析和建议
-  const analysis = generatePeachBlossomAnalysis(positions, type, strength)
-  const suggestions = generatePeachBlossomSuggestions(type, strength)
+  const analysis = generateEnhancedPeachBlossomAnalysis(uniquePositions, peachBlossomTypes, type, strength)
+  const suggestions = generateEnhancedPeachBlossomSuggestions(type, strength, peachBlossomTypes)
   
   return {
-    hasPeachBlossom: positions.length > 0,
-    positions,
+    hasPeachBlossom: uniquePositions.length > 0,
+    positions: uniquePositions,
     type,
     strength,
     analysis,
     suggestions,
+    peachBlossomTypes,
+    overallScore,
     eightChar: {
-      year: eightChar.getYear().getEarthBranch().getName(),
-      month: eightChar.getMonth().getEarthBranch().getName(),
-      day: eightChar.getDay().getEarthBranch().getName(),
-      hour: eightChar.getHour().getEarthBranch().getName(),
+      year: pillars.year.branch,
+      month: pillars.month.branch,
+      day: pillars.day.branch,
+      hour: pillars.hour.branch,
       yearPillar: eightChar.getYear().toString(),
       monthPillar: eightChar.getMonth().toString(),
       dayPillar: eightChar.getDay().toString(),
@@ -180,29 +361,145 @@ export function findPeachBlossoms(
 }
 
 /**
- * 获取桃花含义
+ * 创建桃花位置信息
  */
-function getPeachBlossomMeaning(pillar: string, baseBranch: string): string {
-  const meanings = {
-    year: '早年桃花，感情启蒙早，异性缘好',
-    month: '青年桃花，感情丰富，魅力较强', 
-    day: '正桃花，感情专一，婚姻美满',
-    hour: '晚年桃花，老来俏，子女缘佳'
-  }
+function createPeachBlossomPosition(
+  pillar: 'year' | 'month' | 'day' | 'hour',
+  branch: string,
+  peachBlossomBranch: string,
+  type: PeachBlossomType,
+  baseBranch?: string
+): PeachBlossomPosition {
+  const pillarWeight = PEACH_BLOSSOM_WEIGHTS.pillar[pillar]
+  const typeWeight = PEACH_BLOSSOM_WEIGHTS.type[type]
+  const strength = pillarWeight * typeWeight
   
-  return meanings[pillar as keyof typeof meanings] || '桃花运势'
+  return {
+    pillar,
+    pillarName: pillar === 'year' ? '年柱' : 
+               pillar === 'month' ? '月柱' :
+               pillar === 'day' ? '日柱' : '时柱',
+    branch,
+    peachBlossomBranch,
+    meaning: getPeachBlossomMeaning(pillar, type),
+    type,
+    typeName: PEACH_BLOSSOM_TYPE_NAMES[type],
+    strength
+  }
 }
 
 /**
- * 生成桃花分析
+ * 去重处理桃花位置
  */
-function generatePeachBlossomAnalysis(
+function removeDuplicatePositions(positions: PeachBlossomPosition[]): PeachBlossomPosition[] {
+  const positionMap = new Map<string, PeachBlossomPosition>()
+  
+  positions.forEach(position => {
+    const key = `${position.pillar}-${position.branch}`
+    const existing = positionMap.get(key)
+    
+    if (!existing || position.strength > existing.strength) {
+      // 如果是新位置或者当前桃花星强度更高，则替换
+      positionMap.set(key, position)
+    }
+  })
+  
+  return Array.from(positionMap.values())
+}
+
+/**
+ * 计算桃花强度
+ */
+function calculatePeachBlossomStrength(positions: PeachBlossomPosition[]): {
+  strength: 'strong' | 'medium' | 'weak'
+  overallScore: number
+} {
+  if (positions.length === 0) {
+    return { strength: 'weak', overallScore: 0 }
+  }
+  
+  // 计算总强度值
+  const totalStrength = positions.reduce((sum, pos) => sum + pos.strength, 0)
+  
+  // 类型多样性奖励
+  const typeSet = new Set(positions.map(p => p.type))
+  const diversityBonus = typeSet.size * 0.2
+  
+  // 特殊组合奖励
+  let specialBonus = 0
+  if (typeSet.has('redPhoenix') && typeSet.has('heavenlyJoy')) {
+    specialBonus += 0.5 // 红鸾天喜同现
+  }
+  if (positions.some(p => p.pillar === 'day' && p.type === 'xianchi')) {
+    specialBonus += 0.3 // 日柱咸池
+  }
+  
+  const finalScore = Math.min(10, totalStrength + diversityBonus + specialBonus)
+  
+  let strength: 'strong' | 'medium' | 'weak' = 'weak'
+  if (finalScore >= 4.0) strength = 'strong'
+  else if (finalScore >= 2.5) strength = 'medium'
+  
+  return {
+    strength,
+    overallScore: Math.round(finalScore * 10) / 10
+  }
+}
+
+/**
+ * 获取桃花含义
+ */
+function getPeachBlossomMeaning(pillar: string, type: PeachBlossomType): string {
+  const pillarMeanings = {
+    year: '早年',
+    month: '青年',
+    day: '中年',
+    hour: '晚年'
+  }
+  
+  const typeMeanings = {
+    xianchi: '异性缘佳，魅力突出',
+    redPhoenix: '婚姻运佳，感情顺利',
+    heavenlyJoy: '喜庆连连，感情甜蜜',
+    bath: '多情善感，异性缘好',
+    redRomance: '激情浪漫，魅力十足'
+  }
+  
+  return `${pillarMeanings[pillar as keyof typeof pillarMeanings]}${typeMeanings[type]}，${getDetailedMeaning(pillar, type)}`
+}
+
+/**
+ * 获取详细含义
+ */
+function getDetailedMeaning(pillar: string, type: PeachBlossomType): string {
+  if (type === 'redPhoenix') {
+    return pillar === 'year' ? '早婚之兆，感情启蒙早' :
+           pillar === 'month' ? '青年时期感情丰富，容易遇到正缘' :
+           pillar === 'day' ? '婚姻美满，配偶条件好' : '子女缘佳，晚年感情和睦'
+  } else if (type === 'heavenlyJoy') {
+    return pillar === 'year' ? '家庭和睦，早年感情顺利' :
+           pillar === 'month' ? '人缘极佳，容易得到帮助' :
+           pillar === 'day' ? '夫妻恩爱，感情稳定' : '晚年幸福，子女孝顺'
+  } else if (type === 'bath') {
+    return '善于处理异性关系，但需注意感情专一'
+  } else if (type === 'redRomance') {
+    return '感情激烈，容易有浪漫际遇，但需理性对待'
+  } else {
+    return '感情运势平稳'
+  }
+}
+
+/**
+ * 生成增强的桃花分析
+ */
+function generateEnhancedPeachBlossomAnalysis(
   positions: PeachBlossomPosition[],
+  peachBlossomTypes: PeachBlossomResult['peachBlossomTypes'],
   type: PeachBlossomResult['type'], 
   strength: PeachBlossomResult['strength']
 ): string {
   if (positions.length === 0) {
-    return '您的八字中未见传统的咸池桃花星，但这并不意味着感情运势欠佳。只是在感情方面相对内敛含蓄，需要更多主动出击和积极表达才能收获理想的爱情。建议多参与社交活动，主动表达自己的感情想法。'
+    return '您的八字中未见明显的桃花星，但这并不意味着感情运势欠佳。只是在感情方面相对内敛含蓄，需要更多主动出击和积极表达才能收获理想的爱情。建议多参与社交活动，主动表达自己的感情想法。'
   }
   
   const typeDescriptions = {
@@ -220,19 +517,53 @@ function generatePeachBlossomAnalysis(
   
   let analysis = `${typeDescriptions[type]}。${strengthDescriptions[strength]}。`
   
+  // 分析不同类型的桃花星
+  const typeAnalysis: string[] = []
+  
+  if (peachBlossomTypes.redPhoenix.length > 0) {
+    typeAnalysis.push('红鸾星照命，主婚姻喜庆，感情发展顺利，容易遇到正缘')
+  }
+  
+  if (peachBlossomTypes.heavenlyJoy.length > 0) {
+    typeAnalysis.push('天喜星加持，喜庆连连，感情甜蜜，人际关系和谐')
+  }
+  
+  if (peachBlossomTypes.xianchi.length > 0) {
+    typeAnalysis.push('咸池桃花出现，异性缘佳，魅力突出，感情生活丰富')
+  }
+  
+  if (peachBlossomTypes.bath.length > 0) {
+    typeAnalysis.push('沐浴桃花显现，多情善感，善于处理异性关系，但需注意感情专一')
+  }
+  
+  if (peachBlossomTypes.redRomance.length > 0) {
+    typeAnalysis.push('红艳桃花入命，感情激烈浪漫，容易有浪漫际遇，魅力十足')
+  }
+  
+  if (typeAnalysis.length > 0) {
+    analysis += `\n\n从桃花星类型来看：${typeAnalysis.join('；')}。`
+  }
+  
+  // 特殊组合分析
+  if (peachBlossomTypes.redPhoenix.length > 0 && peachBlossomTypes.heavenlyJoy.length > 0) {
+    analysis += '\n\n红鸾天喜双星照临，这是极佳的婚姻组合，预示着感情顺遂，婚姻美满，容易遇到理想伴侣。'
+  }
+  
   if (positions.length > 0) {
-    analysis += `从八字分析来看，${positions.map(p => p.meaning).join('，')}。这些桃花星的出现表明您在相应的人生阶段会有较好的感情运势。`
+    const pillarInfo = positions.map(p => `${p.pillarName}有${p.typeName}`).join('，')
+    analysis += `\n\n具体来看，${pillarInfo}，这些桃花星的出现表明您在相应的人生阶段会有较好的感情运势。`
   }
   
   return analysis
 }
 
 /**
- * 生成桃花建议
+ * 生成增强的桃花建议
  */
-function generatePeachBlossomSuggestions(
+function generateEnhancedPeachBlossomSuggestions(
   type: PeachBlossomResult['type'],
-  strength: PeachBlossomResult['strength']
+  strength: PeachBlossomResult['strength'],
+  peachBlossomTypes: PeachBlossomResult['peachBlossomTypes']
 ): string[] {
   const suggestions: string[] = []
   
@@ -278,9 +609,41 @@ function generatePeachBlossomSuggestions(
       break
   }
   
+  // 根据具体桃花星类型给出专业建议
+  if (peachBlossomTypes.redPhoenix.length > 0) {
+    suggestions.push('红鸾星现，主婚姻喜庆：适合在传统节庆期间表白或举办婚礼，选择穿着红色服饰增强桃花运')
+    suggestions.push('红鸾桃花利正缘：重点关注品德良好、家庭背景相当的对象，避免只看外表')
+  }
+  
+  if (peachBlossomTypes.heavenlyJoy.length > 0) {
+    suggestions.push('天喜星照：多参加喜庆活动如婚礼、满月酒等场合，容易在这些场合遇到良缘')
+    suggestions.push('保持开朗乐观的心态，您的正能量会吸引同样积极的伴侣')
+  }
+  
+  if (peachBlossomTypes.xianchi.length > 0) {
+    suggestions.push('咸池桃花旺盛：注意在水边场所（如咖啡厅、茶室、游泳池）容易遇到心仪对象')
+    suggestions.push('提升个人魅力和气质，但要避免过于张扬，保持神秘感更能吸引异性')
+  }
+  
+  if (peachBlossomTypes.bath.length > 0) {
+    suggestions.push('沐浴桃花多情：善用您的同理心和善解人意的特质，但要建立明确的感情边界')
+    suggestions.push('避免同时与多人暧昧，专注经营一段认真的感情更容易获得幸福')
+  }
+  
+  if (peachBlossomTypes.redRomance.length > 0) {
+    suggestions.push('红艳桃花激情：感情来得快去得也快，要学会在激情中保持理智判断')
+    suggestions.push('适合追求浪漫的恋爱体验，但要注意识别真心与虚情，避免被欺骗感情')
+  }
+  
+  // 特殊组合建议
+  if (peachBlossomTypes.redPhoenix.length > 0 && peachBlossomTypes.heavenlyJoy.length > 0) {
+    suggestions.push('红鸾天喜双现：极佳的婚姻组合，适合在今年内考虑订婚或结婚，时机成熟')
+  }
+  
   // 通用建议
-  suggestions.push('保持真诚的心态，用真心对待每一段感情')
-  suggestions.push('注重个人成长，成为更好的自己才能吸引更好的人')
+  suggestions.push('保持真诚的心态，用真心对待每一段感情，真爱需要时间沉淀')
+  suggestions.push('注重个人成长和内在修养，成为更好的自己才能吸引更好的人')
+  suggestions.push('相信缘分但不依赖缘分，主动创造机会但不强求结果')
   
   return suggestions
 }
@@ -338,20 +701,36 @@ export function calculateWeeklyPeachBlossomFortune(
 }
 
 /**
- * 计算八字桃花评分（考虑桃花位置和类型）
+ * 计算八字桃花评分（增强版，考虑多种桃花类型）
  */
 function calculateEightCharScore(peachBlossom: PeachBlossomResult): number {
   if (!peachBlossom.hasPeachBlossom) return 2.0
   
-  // 基础强度评分
-  const strengthScores = { weak: 3.0, medium: 4.0, strong: 5.0 }
-  let baseScore = strengthScores[peachBlossom.strength]
+  // 使用新的综合评分系统
+  let baseScore = Math.min(5.0, 2.0 + peachBlossom.overallScore * 0.3)
   
-  // 根据桃花类型调整
+  // 桃花类型多样性奖励
+  const typeCount = Object.values(peachBlossom.peachBlossomTypes).filter(arr => arr.length > 0).length
+  const diversityBonus = Math.min(typeCount * 0.15, 0.6)
+  
+  // 特殊桃花星奖励
+  let specialBonus = 0
+  if (peachBlossom.peachBlossomTypes.redPhoenix.length > 0) {
+    specialBonus += 0.3 // 红鸾桃花最吉利
+  }
+  if (peachBlossom.peachBlossomTypes.heavenlyJoy.length > 0) {
+    specialBonus += 0.2 // 天喜桃花吉利
+  }
+  if (peachBlossom.peachBlossomTypes.redPhoenix.length > 0 && 
+      peachBlossom.peachBlossomTypes.heavenlyJoy.length > 0) {
+    specialBonus += 0.3 // 红鸾天喜双现大吉
+  }
+  
+  // 根据传统桃花内外类型调整
   let typeBonus = 0
   switch (peachBlossom.type) {
     case 'mixed':   // 内外桃花，最好
-      typeBonus = 0.3
+      typeBonus = 0.2
       break
     case 'outside': // 墙外桃花，较好
       typeBonus = 0.1
@@ -363,17 +742,11 @@ function calculateEightCharScore(peachBlossom: PeachBlossomResult): number {
       typeBonus = 0
   }
   
-  // 根据桃花位置数量微调（多个位置有桃花更好）
-  const positionBonus = Math.min(peachBlossom.positions.length * 0.1, 0.4)
-  
-  // 特殊组合奖励（如果日柱有桃花，额外加分）
-  let specialBonus = 0
+  // 日柱桃花特别奖励
   const hasDayPillarPeach = peachBlossom.positions.some(p => p.pillar === 'day')
-  if (hasDayPillarPeach) {
-    specialBonus = 0.2 // 日柱桃花最重要
-  }
+  const dayPillarBonus = hasDayPillarPeach ? 0.2 : 0
   
-  const finalScore = Math.max(1, Math.min(5, baseScore + typeBonus + positionBonus + specialBonus))
+  const finalScore = Math.max(1, Math.min(5, baseScore + diversityBonus + specialBonus + typeBonus + dayPillarBonus))
   return Math.round(finalScore * 10) / 10
 }
 

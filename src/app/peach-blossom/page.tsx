@@ -114,7 +114,12 @@ export default function PeachBlossomPage() {
           {/* 桃花运分析结果 */}
           <PeachBlossomResultComponent 
             result={result} 
-            userName={currentUser?.name} 
+            userName={currentUser?.name}
+            birthDate={currentUser?.birthDate}
+            birthTime={currentUser ? { 
+              hour: parseInt(currentUser.birthTime.split(':')[0]), 
+              minute: parseInt(currentUser.birthTime.split(':')[1]) 
+            } : undefined}
           />
 
           {/* 每周桃花运指数 */}
