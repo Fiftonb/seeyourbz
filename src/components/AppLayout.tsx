@@ -34,6 +34,7 @@ const navItems = [
   { label: '星座', url: '/constellation' },
   { label: '桃花运', url: '/peach-blossom' },
   { label: '命理', url: '/destiny' },
+  { label: '六爻卜卦', url: '/liuyao' },
 ]
 
 
