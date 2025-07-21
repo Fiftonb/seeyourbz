@@ -131,6 +131,287 @@ const RulesDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   );
 };
 
+// 添加新的结果显示组件
+const HexagramResult = ({ yao, result }: { yao: YaoType[], result: string }) => {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basic']))
+
+  const toggleSection = (section: string) => {
+    const newExpanded = new Set(expandedSections)
+    if (newExpanded.has(section)) {
+      newExpanded.delete(section)
+    } else {
+      newExpanded.add(section)
+    }
+    setExpandedSections(newExpanded)
+  }
+
+  // 解析结果文本
+  const parseResult = (text: string) => {
+    const lines = text.split('\n')
+    const parsed = {
+      basic: '',
+      hexagram: '',
+      interpretation: '',
+      aspects: {} as Record<string, string>,
+      yaoExplanation: [] as Array<{index: number, name: string, body: string, fengshui: string, family: string, isChanging: boolean}>,
+      guaExplanation: ''
+    }
+
+    let currentSection = ''
+    let yaoIndex = -1
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (line.startsWith('下卦为') && line.includes('上卦为')) {
+        parsed.basic = line
+      } else if (/^第\d+卦$/.test(line)) {
+        // 匹配 "第X卦" 的格式
+        currentSection = 'hexagram'
+        parsed.hexagram += line + '\n'
+      } else if (line.startsWith('卦名：') || line.startsWith('原文：') || line.startsWith('吉凶：')) {
+        currentSection = 'hexagram'
+        parsed.hexagram += line + '\n'
+      } else if (line.startsWith('解释：')) {
+        currentSection = 'interpretation'
+        // 将解释部分的内容处理，提取【】项目
+        const interpretationText = line.replace('解释：', '')
+        parsed.interpretation = interpretationText
+        
+        // 继续处理后续行直到遇到爻位解释
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j].trim()
+          if (nextLine === '爻位解释：') {
+            i = j - 1  // 设置外层循环位置
+            break
+          }
+          parsed.interpretation += '\n' + nextLine
+        }
+        
+        // 从解释文本中提取【】项目
+        const aspectRegex = /【(.+?)】([^【]*)/g
+        let match
+        while ((match = aspectRegex.exec(parsed.interpretation)) !== null) {
+          const aspectName = match[1]
+          const aspectContent = match[2].trim()
+          if (aspectContent) {
+            parsed.aspects[aspectName] = aspectContent
+          }
+        }
+      } else if (line === '爻位解释：') {
+        currentSection = 'yao'
+      } else if (/^第\d+爻（.+）：$/.test(line)) {
+        // 匹配 "第X爻（名称）：" 的格式
+        const match = line.match(/^第(\d+)爻（(.+?)）：$/)
+        if (match) {
+          yaoIndex = parseInt(match[1]) - 1
+          const yaoName = match[2]
+          const isChanging = yao[yaoIndex]?.changing || false
+          parsed.yaoExplanation[yaoIndex] = {
+            index: yaoIndex,
+            name: yaoName,
+            body: '',
+            fengshui: '',
+            family: '',
+            isChanging
+          }
+        }
+      } else if (line.startsWith('人体：') && yaoIndex >= 0 && parsed.yaoExplanation[yaoIndex]) {
+        parsed.yaoExplanation[yaoIndex].body = line.replace('人体：', '').trim()
+      } else if (line.startsWith('风水：') && yaoIndex >= 0 && parsed.yaoExplanation[yaoIndex]) {
+        parsed.yaoExplanation[yaoIndex].fengshui = line.replace('风水：', '').trim()
+      } else if (line.startsWith('家庭成员：') && yaoIndex >= 0 && parsed.yaoExplanation[yaoIndex]) {
+        parsed.yaoExplanation[yaoIndex].family = line.replace('家庭成员：', '').trim()
+      } else if (line === '卦象解释：') {
+        currentSection = 'gua'
+      } else if (currentSection === 'hexagram' && line) {
+        parsed.hexagram += line + '\n'
+      } else if (currentSection === 'gua' && line) {
+        parsed.guaExplanation += line + '\n'
+      }
+    }
+
+    return parsed
+  }
+
+  if (!result) return null
+
+  const parsedResult = parseResult(result)
+
+  const aspectCategories = {
+    '基础运势': ['大象', '运势', '决策', '时运'],
+    '事业财运': ['事业', '经商', '财运', '周转', '买卖', '求事', '改行', '开业'],
+    '感情家庭': ['婚恋', '家宅', '家运', '子女', '胎孕'],
+    '健康医疗': ['身体', '疾病'],
+    '学业出行': ['求名', '外出', '考试'],
+    '日常事务': ['等人', '寻人', '失物', '诉讼']
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* 基本卦象信息 */}
+      <Card>
+        <CardHeader 
+          className="cursor-pointer" 
+          onClick={() => toggleSection('basic')}
+        >
+          <CardTitle className="flex items-center justify-between text-lg">
+            <span>🎯 基本卦象</span>
+            <span className="text-xl">{expandedSections.has('basic') ? '−' : '+'}</span>
+          </CardTitle>
+        </CardHeader>
+        {expandedSections.has('basic') && (
+          <CardContent className="space-y-3">
+            <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg">
+              <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{parsedResult.basic}</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+              {parsedResult.hexagram.split('\n').filter(line => line.trim()).map((line, index) => (
+                <div key={index} className="flex">
+                  <span className="text-gray-600 dark:text-gray-400 min-w-[80px]">
+                    {/^第\d+卦$/.test(line) ? '卦序：' :
+                     line.startsWith('卦名：') ? '卦名：' :
+                     line.startsWith('原文：') ? '原文：' :
+                     line.startsWith('吉凶：') ? '吉凶：' : ''}
+                  </span>
+                  <span className="flex-1">{line.replace(/^(卦名：|原文：|吉凶：)/, '').replace(/^第(\d+)卦$/, '$1')}</span>
+                </div>
+              ))}
+              {parsedResult.interpretation && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex">
+                    <span className="text-gray-600 dark:text-gray-400 min-w-[80px]">基本释义：</span>
+                    <div className="flex-1">
+                      <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                        {parsedResult.interpretation.split('【')[0].trim()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* 运势解读 */}
+      {Object.entries(aspectCategories).map(([category, aspects]) => {
+        const categoryAspects = aspects.filter(aspect => parsedResult.aspects[aspect])
+        if (categoryAspects.length === 0) return null
+
+        return (
+          <Card key={category}>
+            <CardHeader 
+              className="cursor-pointer" 
+              onClick={() => toggleSection(category)}
+            >
+              <CardTitle className="flex items-center justify-between text-lg">
+                <span>
+                  {category === '基础运势' ? '📊' :
+                   category === '事业财运' ? '💼' :
+                   category === '感情家庭' ? '❤️' :
+                   category === '健康医疗' ? '🏥' :
+                   category === '学业出行' ? '🎓' :
+                   category === '日常事务' ? '📝' : '📋'} {category}
+                </span>
+                <span className="text-xl">{expandedSections.has(category) ? '−' : '+'}</span>
+              </CardTitle>
+            </CardHeader>
+            {expandedSections.has(category) && (
+              <CardContent>
+                <div className="grid gap-3">
+                  {categoryAspects.map(aspect => (
+                    <div key={aspect} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{aspect}</h4>
+                      <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                        {parsedResult.aspects[aspect]}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )
+      })}
+
+      {/* 爻位解释 */}
+      <Card>
+        <CardHeader 
+          className="cursor-pointer" 
+          onClick={() => toggleSection('yao')}
+        >
+          <CardTitle className="flex items-center justify-between text-lg">
+            <span>🔮 爻位详解</span>
+            <span className="text-xl">{expandedSections.has('yao') ? '−' : '+'}</span>
+          </CardTitle>
+        </CardHeader>
+        {expandedSections.has('yao') && (
+          <CardContent>
+            <div className="grid gap-3">
+              {parsedResult.yaoExplanation.map((yaoInfo, index) => (
+                <div 
+                  key={index} 
+                  className={`border rounded-lg p-4 ${yaoInfo.isChanging ? 'border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20' : 'border-gray-200 dark:border-gray-700'}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                      第{index + 1}爻（{yaoInfo.name}）
+                    </h4>
+                    {yaoInfo.isChanging && (
+                      <span className="px-2 py-1 bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs rounded-full font-medium">
+                        ⚠️ 变爻
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">人体：</span>
+                      <span className="text-gray-900 dark:text-gray-100">{yaoInfo.body}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">风水：</span>
+                      <span className="text-gray-900 dark:text-gray-100">{yaoInfo.fengshui}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">家庭：</span>
+                      <span className="text-gray-900 dark:text-gray-100">{yaoInfo.family}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* 卦象解释 */}
+      {parsedResult.guaExplanation && (
+        <Card>
+          <CardHeader 
+            className="cursor-pointer" 
+            onClick={() => toggleSection('gua')}
+          >
+            <CardTitle className="flex items-center justify-between text-lg">
+              <span>☯️ 卦象详解</span>
+              <span className="text-xl">{expandedSections.has('gua') ? '−' : '+'}</span>
+            </CardTitle>
+          </CardHeader>
+          {expandedSections.has('gua') && (
+            <CardContent>
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {parsedResult.guaExplanation}
+                </pre>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+    </div>
+  )
+}
+
 export function Liuyao() {
   const [yao, setYao] = useState<YaoType[]>(Array(6).fill({ value: 'yang', changing: false, name: '少阳' }))
   const [throwResults, setThrowResults] = useState<ThrowResult[]>([])
@@ -293,8 +574,8 @@ export function Liuyao() {
           </div>
 
           {result && (
-            <div className="mt-6 p-4 bg-muted rounded-md">
-              <pre className="whitespace-pre-wrap">{result}</pre>
+            <div className="mt-6">
+              <HexagramResult yao={yao} result={result} />
             </div>
           )}
         </CardContent>
