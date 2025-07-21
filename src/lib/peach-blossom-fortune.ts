@@ -678,8 +678,7 @@ export function calculateWeeklyPeachBlossomFortune(
   
   // 生成建议和幸运信息
   const suggestions = generateWeeklySuggestions(overallScore, peachBlossom)
-  const luckyDays = generateLuckyDays(targetWeek, overallScore)
-  const avoidDays = generateAvoidDays(targetWeek, overallScore)
+  const [luckyDays, avoidDays] = generateDays(targetWeek, overallScore, peachBlossom.eightChar)
   const luckyColors = generateLuckyColors(peachBlossom.type)
   const luckyItems = generateLuckyItems(peachBlossom.strength)
   
@@ -910,23 +909,115 @@ function generateWeeklySuggestions(score: number, peachBlossom: PeachBlossomResu
 }
 
 /**
+ * 生成幸运日和不利日
+ * 返回 [luckyDays, avoidDays] 两个数组，确保没有重复
+ */
+function generateDays(targetWeek: Date, score: number, eightChar: EightCharInfo): [string[], string[]] {
+  const { joy, avoid } = getBaziJoyAndAvoid(eightChar)
+  const luckyDays: string[] = []
+  const avoidDays: string[] = []
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  
+  // 用于跟踪日期，避免重复
+  const processedDates = new Set<string>()
+
+  // 确保从周一开始计算
+  const weekStart = new Date(targetWeek)
+  const dayOfWeek = targetWeek.getDay()
+  // 将日期调整到本周的周一 (0是周日，1是周一，所以需要特殊处理)
+  weekStart.setDate(targetWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+
+  // 第一步：先找出最佳的吉日（既有喜用神元素，又没有忌神元素）
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + i)
+    
+    const solarDay = SolarDay.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+    const dayGan = solarDay.getLunarDay().getSixtyCycle().getHeavenStem().getName()
+    const dayZhi = solarDay.getLunarDay().getSixtyCycle().getEarthBranch().getName()
+
+    const dateKey = `${date.getDate()}`
+    const hasJoyElement = joy.stems.includes(dayGan) || joy.branches.includes(dayZhi)
+    const hasAvoidElement = avoid.stems.includes(dayGan) || avoid.branches.includes(dayZhi)
+    
+    // 最佳吉日：有喜用神元素且没有忌神元素
+    if (hasJoyElement && !hasAvoidElement) {
+      luckyDays.push(`${date.getDate()}号 (${weekdays[date.getDay()]})`)
+      processedDates.add(dateKey)
+    }
+  }
+
+  // 第二步：找出忌日（有忌神元素的日子）
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + i)
+    
+    const solarDay = SolarDay.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+    const dayGan = solarDay.getLunarDay().getSixtyCycle().getHeavenStem().getName()
+    const dayZhi = solarDay.getLunarDay().getSixtyCycle().getEarthBranch().getName()
+
+    const dateKey = `${date.getDate()}`
+    // 如果这一天已经是吉日，就跳过
+    if (processedDates.has(dateKey)) continue
+    
+    // 忌日：有忌神元素
+    if (avoid.stems.includes(dayGan) || avoid.branches.includes(dayZhi)) {
+      avoidDays.push(`${date.getDate()}号 (${weekdays[date.getDay()]})`)
+      processedDates.add(dateKey)
+    }
+  }
+
+  // 第三步：如果吉日不足，放宽条件，找有喜用神元素但还未处理的日子
+  if (luckyDays.length === 0) {
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart)
+      date.setDate(weekStart.getDate() + i)
+      
+      const dateKey = `${date.getDate()}`
+      // 如果这一天已经被处理过，就跳过
+      if (processedDates.has(dateKey)) continue
+      
+      const solarDay = SolarDay.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+      const dayGan = solarDay.getLunarDay().getSixtyCycle().getHeavenStem().getName()
+      const dayZhi = solarDay.getLunarDay().getSixtyCycle().getEarthBranch().getName()
+
+      // 次佳吉日：只要有喜用神元素（即使有忌神元素也可以）
+      const hasJoyElement = joy.stems.includes(dayGan) || joy.branches.includes(dayZhi)
+      
+      if (hasJoyElement) {
+        luckyDays.push(`${date.getDate()}号 (${weekdays[date.getDay()]})`)
+        processedDates.add(dateKey)
+      }
+    }
+  }
+
+  // 如果没有找到任何吉日，返回"本周无"
+  if (luckyDays.length === 0) {
+    luckyDays.push("本周无")
+  }
+  
+  // 如果没有找到任何忌日，返回"本周无"
+  if (avoidDays.length === 0) {
+    avoidDays.push("本周无")
+  }
+  
+  return [luckyDays.slice(0, 3), avoidDays.slice(0, 3)]
+}
+
+/**
  * 生成幸运日
  */
-function generateLuckyDays(targetWeek: Date, score: number): string[] {
-  const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const luckyCount = score >= 4 ? 3 : score >= 3 ? 2 : 1
-  
-  return weekdays.slice(0, luckyCount)
+function generateLuckyDays(targetWeek: Date, score: number, eightChar: EightCharInfo): string[] {
+  const [luckyDays, _] = generateDays(targetWeek, score, eightChar)
+  return luckyDays
 }
 
 /**
  * 生成不利日
  */
-function generateAvoidDays(targetWeek: Date, score: number): string[] {
-  const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const avoidCount = score <= 2 ? 3 : score <= 3 ? 2 : 1
-  
-  return weekdays.slice(-avoidCount)
+function generateAvoidDays(targetWeek: Date, score: number, eightChar: EightCharInfo): string[] {
+  const [_, avoidDays] = generateDays(targetWeek, score, eightChar)
+  return avoidDays
 }
 
 /**
@@ -957,10 +1048,81 @@ function generateLuckyItems(strength: PeachBlossomResult['strength']): string[] 
 }
 
 /**
- * 获取周数
+ * 分析八字喜忌
+ * (这是一个简化的版本，实际应用中可能需要更复杂的逻辑)
+ */
+function getBaziJoyAndAvoid(eightChar: EightCharInfo): {
+  joy: { stems: string[], branches: string[] },
+  avoid: { stems: string[], branches: string[] }
+} {
+  // 这是一个非常基础的喜用神判断逻辑
+  // 实际的八字分析远比这复杂，这里仅作演示
+  const dayStem = eightChar.dayPillar[0]
+  const dayBranch = eightChar.dayPillar[1]
+  
+  // 简单地以日主五行为基础进行判断
+  // 这里可以扩展为更精确的五行强弱分析
+  const fiveElements = {
+    '甲': '木', '乙': '木',
+    '丙': '火', '丁': '火',
+    '戊': '土', '己': '土',
+    '庚': '金', '辛': '金',
+    '壬': '水', '癸': '水',
+  }
+
+  const element = fiveElements[dayStem as keyof typeof fiveElements]
+
+  const joy = { stems: [] as string[], branches: [] as string[] }
+  const avoid = { stems: [] as string[], branches: [] as string[] }
+
+  // 举例：木命喜水、木，忌金、土
+  if (element === '木') {
+    joy.stems = ['壬', '癸']
+    joy.branches = ['子', '亥', '寅', '卯']
+    avoid.stems = ['庚', '辛', '戊', '己']
+    avoid.branches = ['申', '酉', '戌', '辰', '丑', '未']
+  } else if (element === '火') {
+    joy.stems = ['甲', '乙']
+    joy.branches = ['寅', '卯', '巳', '午']
+    avoid.stems = ['壬', '癸', '庚', '辛']
+    avoid.branches = ['亥', '子', '申', '酉']
+  } else if (element === '土') {
+    joy.stems = ['丙', '丁']
+    joy.branches = ['巳', '午', '辰', '戌', '丑', '未']
+    avoid.stems = ['甲', '乙', '壬', '癸']
+    avoid.branches = ['寅', '卯', '亥', '子']
+  } else if (element === '金') {
+    joy.stems = ['戊', '己']
+    joy.branches = ['辰', '戌', '丑', '未', '申', '酉']
+    avoid.stems = ['丙', '丁', '甲', '乙']
+    avoid.branches = ['巳', '午', '寅', '卯']
+  } else if (element === '水') {
+    joy.stems = ['庚', '辛']
+    joy.branches = ['申', '酉', '亥', '子']
+    avoid.stems = ['戊', '己', '丙', '丁']
+    avoid.branches = ['辰', '戌', '丑', '未', '巳', '午']
+  }
+
+  return { joy, avoid }
+}
+
+/**
+ * 获取周数 (使用ISO 8601标准，与主流在线工具一致)
+ * 确保7月17日是第29周，7月24日是第30周
  */
 function getWeekNumber(date: Date): number {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1)
-  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+  // 方法1: 标准ISO 8601（周四为基准）
+  // 创建新的日期对象，避免修改原始日期
+  const targetDate = new Date(date.getTime())
+  
+  // ISO 8601标准：设置为当周的周四（ISO周的中间），因为ISO周总是包含周四
+  targetDate.setDate(targetDate.getDate() + 4 - (targetDate.getDay() || 7))
+  
+  // 获取年份的1月1日
+  const yearStart = new Date(targetDate.getFullYear(), 0, 1)
+  
+  // 计算到年初的周数
+  const weekNumber = Math.ceil((((targetDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+  
+  return weekNumber
 } 
