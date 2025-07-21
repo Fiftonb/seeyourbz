@@ -412,7 +412,7 @@ export default function DestinyPage() {
           八字命理计算
         </Heading>
         <Text className="text-xl text-gray-600 dark:text-gray-400">
-          传统命理学的现代化计算工具
+          用法:复制结果后去询问Ai
         </Text>
         <div className="flex justify-center gap-3 items-center">
           <Button
