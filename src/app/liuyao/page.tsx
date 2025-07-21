@@ -11,7 +11,7 @@ export default function LiuyaoPage() {
           六爻卜卦
         </Heading>
         <Text className="text-gray-600 dark:text-gray-400">
-          传统易经占卜，通过投掷硬币形成六爻卦象，解读人生吉凶
+          传统易经占卜，通过投掷铜钱形成六爻卦象，解读人生吉凶
         </Text>
       </div>
       

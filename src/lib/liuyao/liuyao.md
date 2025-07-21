@@ -37,7 +37,7 @@
 
 ## 3. 修改图片路径
 
-在`components/liuyao.tsx`中，修改硬币图片路径为本地路径：
+在`components/liuyao.tsx`中，修改铜钱图片路径为本地路径：
 
 ```typescript
 // 修改前
@@ -92,7 +92,7 @@ export default function LiuyaoPage() {
 
 ## 8. 测试功能
 
-完成迁移后，访问六爻算卦页面，测试投掷硬币和解卦功能是否正常工作。
+完成迁移后，访问六爻算卦页面，测试投掷铜钱和解卦功能是否正常工作。
 
 ## 注意事项
 

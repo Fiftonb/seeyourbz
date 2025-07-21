@@ -94,7 +94,7 @@ const RulesDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-bold mb-2">一、硬币摇卦法说明</h3>
+              <h3 className="text-lg font-bold mb-2">一、铜钱摇卦法说明</h3>
               <p>1、一背面两字面：少阳🌱</p>
               <p>2、两背面一字面：少阴🍃</p>
               <p>3、三个字面：老阴🌺（变爻）</p>
@@ -552,7 +552,7 @@ export function Liuyao() {
                   disabled={isFlipping}
                   className="flex-1 bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
                 >
-                  投掷硬币（第{currentThrow + 1}次）
+                  投掷铜钱（第{currentThrow + 1}次）
                 </button>
               ) : (
                 <>
