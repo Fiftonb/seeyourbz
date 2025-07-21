@@ -113,7 +113,7 @@ export default function AlmanacPage() {
               className={`px-4 py-2 rounded-md transition-all duration-300 ${
                 activeTab === 'overview'
                   ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
               }`}
             >
               <CalendarIcon className="size-4 mr-2" />
@@ -125,7 +125,7 @@ export default function AlmanacPage() {
               className={`px-4 py-2 rounded-md transition-all duration-300 ${
                 activeTab === 'details'
                   ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
               }`}
             >
               <SparklesIcon className="size-4 mr-2" />
@@ -137,7 +137,7 @@ export default function AlmanacPage() {
               className={`px-4 py-2 rounded-md transition-all duration-300 ${
                 activeTab === 'hours'
                   ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
               }`}
             >
               <ClockIcon className="size-4 mr-2" />
