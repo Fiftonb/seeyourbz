@@ -80,13 +80,13 @@ const RulesDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">占卦规则说明</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">占卦规则说明</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
               ✕
             </button>
@@ -94,34 +94,34 @@ const RulesDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-bold mb-2">一、铜钱摇卦法说明</h3>
-              <p>1、一背面两字面：少阳🌱</p>
-              <p>2、两背面一字面：少阴🍃</p>
-              <p>3、三个字面：老阴🌺（变爻）</p>
-              <p>4、三个背面：老阳☀️（变爻）</p>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">一、铜钱摇卦法说明</h3>
+              <p className="text-gray-700 dark:text-gray-300">1、一背面两字面：少阳🌱</p>
+              <p className="text-gray-700 dark:text-gray-300">2、两背面一字面：少阴🍃</p>
+              <p className="text-gray-700 dark:text-gray-300">3、三个字面：老阴🌺（变爻）</p>
+              <p className="text-gray-700 dark:text-gray-300">4、三个背面：老阳☀️（变爻）</p>
               <div className="flex items-center space-x-2 mt-2">
                 <img src={COIN_YANG} alt="正面" className="w-6 h-6" />
                 <img src={RIGHT_ALLOW} alt="右" className="w-6 h-6" />
-                <span>正面</span>
+                <span className="text-gray-700 dark:text-gray-300">正面</span>
                 <img src={COIN_YIN} alt="反面" className="w-6 h-6" />
                 <img src={RIGHT_ALLOW} alt="右" className="w-6 h-6" />
-                <span>反面</span>
+                <span className="text-gray-700 dark:text-gray-300">反面</span>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold mb-2">二、可测内容</h3>
-              <div>大象、运势、事业、经商、求名、婚恋、决策、时运、财运、家宅、身体、疾病、胎孕、家运、子女、周转、买卖、等人、寻人、失物、外出、考试、诉讼、求事、改行、开业</div>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">二、可测内容</h3>
+              <div className="text-gray-700 dark:text-gray-300">大象、运势、事业、经商、求名、婚恋、决策、时运、财运、家宅、身体、疾病、胎孕、家运、子女、周转、买卖、等人、寻人、失物、外出、考试、诉讼、求事、改行、开业</div>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold mb-2">三、周易五不测</h3>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">三、周易五不测</h3>
               <div className="space-y-2">
-                <p>1、不动不测。万物变动兆于机，事物变化之前都有先兆，能够把握就占得先机；事物未动则不需要占，如一场体育比赛，时间、地点、参加人员都还没有确定，不用预测</p>
-                <p>2、不诚不测。以现代话说，易经反映出整体论、系统论、全息论的特色，万物生命是一个整体，特别是测的人与被占者的心理有直接的关系，常言心诚则灵，念力，意念发动有力，也是信息的发射，感应自然万物接收。心不诚，念不纯，影响信息的准确性</p>
-                <p>3、不正不测。违背良知之事，非法之事，自然不应。道德二字，现在变成一个词，变成说教。其实不是，道德，大道为先，德行居后，合与道才有德，有德方合于道。所谓无道无良，无法无天，如一些腐败分子害怕东窗事发，烧香求佑，最后锒铛入狱，徒增笑柄</p>
-                <p>4、重卦不测。比如测事情，已经占得了一卦，又想再起一卦看是否相符，不能保证预测的准确性</p>
-                <p>5、没事不测。没有事情，不用测，抱着玩玩看的心理，也不要测，测也不准</p>
+                <p className="text-gray-700 dark:text-gray-300">1、不动不测。万物变动兆于机，事物变化之前都有先兆，能够把握就占得先机；事物未动则不需要占，如一场体育比赛，时间、地点、参加人员都还没有确定，不用预测</p>
+                <p className="text-gray-700 dark:text-gray-300">2、不诚不测。以现代话说，易经反映出整体论、系统论、全息论的特色，万物生命是一个整体，特别是测的人与被占者的心理有直接的关系，常言心诚则灵，念力，意念发动有力，也是信息的发射，感应自然万物接收。心不诚，念不纯，影响信息的准确性</p>
+                <p className="text-gray-700 dark:text-gray-300">3、不正不测。违背良知之事，非法之事，自然不应。道德二字，现在变成一个词，变成说教。其实不是，道德，大道为先，德行居后，合与道才有德，有德方合于道。所谓无道无良，无法无天，如一些腐败分子害怕东窗事发，烧香求佑，最后锒铛入狱，徒增笑柄</p>
+                <p className="text-gray-700 dark:text-gray-300">4、重卦不测。比如测事情，已经占得了一卦，又想再起一卦看是否相符，不能保证预测的准确性</p>
+                <p className="text-gray-700 dark:text-gray-300">5、没事不测。没有事情，不用测，抱着玩玩看的心理，也不要测，测也不准</p>
               </div>
             </div>
           </div>
