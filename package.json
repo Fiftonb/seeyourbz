@@ -18,7 +18,8 @@
     "db:reset": "rm -f prisma/dev.db && npm run db:push && npm run db:seed",
     "db:backup:clean": "find prisma/backups -name '*.db' -mtime +30 -delete 2>/dev/null || true && find prisma/backups -name '*.sql' -mtime +30 -delete 2>/dev/null || true",
     "db:backup:linux": "./scripts/backup-db-linux.sh",
-    "db:backup:macos": "./scripts/backup-db.sh"
+    "db:backup:macos": "./scripts/backup-db.sh",
+    "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

@@ -35,21 +35,59 @@ model CalendarEvent {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([title, userId])
   @@map("calendar_events")
 }
 
 model UserSubmission {
-  id            String   @id @default(cuid())
-  type          String   // 'peach-blossom' 或 'destiny'
-  ipAddress     String   // 用户IP地址
-  userAgent     String?  // 用户浏览器信息
-  inputData     String   // JSON格式的输入数据
-  resultData    String?  // JSON格式的计算结果（可选）
-  userId        String?  // 关联用户ID（如果已登录）
-  createdAt     DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  type      String
+  ipAddress String
+  userAgent String
+  data      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("user_submissions")
+}
+
+// 新增的五行论命表
+model WuXingLunMing {
+  wh     String  @id      // 五行名称，如"火"、"水"等
+  tnwh   String?          // 通年五行
+  ynwh   String?          // 抑年五行
+  skzhyj String?          // 生克制化原理
+  whzx   String?          // 五行之性
+  szwh   String?          // 身体五行
+  hyhw   String?          // 行业和方位
+  whw    String?          // 五行物
+  whq    String?          // 五行情
+
+  @@map("wu_xing_lun_ming")
+}
+
+// 新增的日干论命表
+model RiGanLunMing {
+  id    Int     @id @default(autoincrement())
+  rgz   String?           // 日干支，如"丙戌"
+  rgxx  String?           // 日干性格
+  rgcz  String?           // 日干词组
+  rgzfx String?           // 日干支分析
+  xgfx  String?           // 性格分析
+  aqfx  String?           // 爱情分析
+  syfx  String?           // 事业分析
+  cyfx  String?           // 财运分析
+  jkfx  String?           // 健康分析
+
+  @@map("ri_gan_lun_ming")
+}
+
+// 新增的月日时命理表
+model RiYueShiMingLi {
+  id      Int     @id @default(autoincrement())
+  siceng  String?           // 时辰，如"九月"
+  mingmi  String?           // 命理秘密
+
+  @@map("ri_yue_shi_ming_li")
 } 

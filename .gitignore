@@ -44,6 +44,7 @@ next-env.d.ts
 
 # 数据库备份文件
 /prisma/backups/
+/prisma/migrations/
 *.db.backup
 *.sql.backup
 
