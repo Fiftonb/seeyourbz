@@ -291,10 +291,11 @@ export default function DestinyPage() {
     params.set('eightChar', encodeURIComponent(JSON.stringify(structuredResult.eightChar)))
     params.set('birthDate', encodeURIComponent(selectedDate.toISOString()))
     params.set('birthTime', encodeURIComponent(timeInput))
+    params.set('gender', encodeURIComponent(gender)) // 添加性别参数
     
     // 跳转到简批命理结果页面
     router.push(`/destiny-jianpi?${params.toString()}` as any)
-  }, [structuredResult, selectedDate, timeInput, router])
+  }, [structuredResult, selectedDate, timeInput, gender, router])
   
   // 在组件未完全挂载时显示简单的加载状态
   if (!isMounted) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getLunarDetailInfo } from '@/lib/tyme';
+import { calculateChengGuFromLunar } from '@/lib/jianpi/chengu';
 
 // 处理文本中的换行符
 function processText(text: string | null): string | null {
@@ -34,7 +35,7 @@ function processObject(obj: any): any {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { eightChar, birthDate, birthTime } = body;
+    const { eightChar, birthDate, birthTime, gender } = body;
 
     if (!eightChar || !eightChar.day || !eightChar.hour) {
       return NextResponse.json(
@@ -148,11 +149,46 @@ export async function POST(request: Request) {
     const yueshiResults = await Promise.all(yueshiQueries);
     const yueshiData = yueshiResults.filter(result => result !== null);
 
+    // 计算袁天罡称骨算命
+    let chengguData = null;
+    if (birthDate && birthTime) {
+      try {
+        const date = new Date(birthDate);
+        const lunarInfo = getLunarDetailInfo(date);
+        
+        // 从时间字符串中提取小时
+        const timeParts = birthTime.split(':');
+        const hour = parseInt(timeParts[0]) || 0;
+        
+        // 转换前端的性别格式为称骨算命函数所需的格式
+        let chengguGender: 'male' | 'female' = 'male'; // 默认男命
+        if (gender) {
+          if (gender === 'WOMAN' || gender === 'female') {
+            chengguGender = 'female';
+          } else if (gender === 'MAN' || gender === 'male') {
+            chengguGender = 'male';
+          }
+        }
+        
+        chengguData = calculateChengGuFromLunar(
+          lunarInfo.year,
+          lunarInfo.month,
+          lunarInfo.day,
+          hour,
+          chengguGender
+        );
+      } catch (error) {
+        console.error('称骨算命计算错误:', error);
+        // 如果计算失败，继续返回其他数据
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         rigan: processObject(riganData),
         yueshi: yueshiData.map(processObject),
+        chenggu: chengguData,
         searchInfo: {
           dayStem,
           hourBranch,
