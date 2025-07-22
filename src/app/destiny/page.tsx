@@ -12,6 +12,7 @@ import { Divider } from '@/components/ui/divider'
 import { LunarDatePicker } from '@/components/ui/lunar-date-picker'
 import { getCompleteEightCharInfo } from '@/lib/tyme'
 import { CalendarIcon, ClockIcon, SparklesIcon } from '@heroicons/react/16/solid'
+import { useRouter } from 'next/navigation'
 
 export default function DestinyPage() {
   // 表单状态
@@ -21,6 +22,9 @@ export default function DestinyPage() {
   const [gender, setGender] = useState<'MAN' | 'WOMAN'>('MAN')
   const [startAge, setStartAge] = useState<number>(2)
   
+  // 初始化路由
+  const router = useRouter()
+  
   // 计算结果状态 - 添加默认值避免undefined状态
   const [calculationResult, setCalculationResult] = useState<string>('')
   const [structuredResult, setStructuredResult] = useState<any>(null)
@@ -29,6 +33,8 @@ export default function DestinyPage() {
   
   // 添加组件挂载状态，确保初始渲染稳定
   const [isMounted, setIsMounted] = useState(false)
+  
+
   
   // 组件挂载后设置状态
   useEffect(() => {
@@ -276,6 +282,20 @@ export default function DestinyPage() {
     }
   }, [calculationResult])
 
+  // 简批命理功能
+  const handleJianPi = useCallback(() => {
+    if (!structuredResult) return
+    
+    // 构建查询参数，将八字信息和出生日期传递给简批结果页面
+    const params = new URLSearchParams()
+    params.set('eightChar', encodeURIComponent(JSON.stringify(structuredResult.eightChar)))
+    params.set('birthDate', encodeURIComponent(selectedDate.toISOString()))
+    params.set('birthTime', encodeURIComponent(timeInput))
+    
+    // 跳转到简批命理结果页面
+    router.push(`/destiny-jianpi?${params.toString()}` as any)
+  }, [structuredResult, selectedDate, timeInput, router])
+  
   // 在组件未完全挂载时显示简单的加载状态
   if (!isMounted) {
     return (
@@ -625,25 +645,41 @@ export default function DestinyPage() {
                 <Heading level={3} className="text-lg font-semibold text-gray-900 dark:text-white">
                   结果操作
                 </Heading>
-                <Button
-                  outline
-                  onClick={handleCopy}
-                  disabled={!calculationResult}
-                  className={`border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-4 py-2 ${
-                    copySuccess 
-                      ? 'animate-bounce bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600' 
-                      : calculationResult 
-                        ? '' 
-                        : 'opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {copySuccess && (
-                      <SparklesIcon className="size-4 animate-pulse" />
-                    )}
-                    {copySuccess ? '复制成功！' : '复制结果'}
-                  </div>
-                </Button>
+                <div className="flex justify-center gap-3">
+                  <Button
+                    outline
+                    onClick={handleCopy}
+                    disabled={!calculationResult}
+                    className={`border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-4 py-2 ${
+                      copySuccess 
+                        ? 'animate-bounce bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600' 
+                        : calculationResult 
+                          ? '' 
+                          : 'opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {copySuccess && (
+                        <SparklesIcon className="size-4 animate-pulse" />
+                      )}
+                      {copySuccess ? '复制成功！' : '复制结果'}
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    outline
+                    onClick={handleJianPi}
+                    disabled={!structuredResult}
+                    className={`border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white font-semibold px-4 py-2 ${
+                      !structuredResult ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <SparklesIcon className="size-4" />
+                      简批命理
+                    </div>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -899,6 +935,8 @@ export default function DestinyPage() {
           </div>
         </div>
       )}
+
+
     </div>
   )
 } 
