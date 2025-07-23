@@ -60,7 +60,10 @@ export async function POST(request: Request) {
 
     // 如果有出生日期信息，使用农历日期进行转换
     if (birthDate) {
-      const date = new Date(birthDate);
+      // 解析本地日期字符串，避免时区转换导致的日期差异
+      const date = birthDate.includes('T') 
+        ? new Date(birthDate) // 保持兼容性，如果是完整时间字符串
+        : new Date(birthDate + 'T00:00:00'); // 如果是日期字符串，添加时间部分确保本地时间
       
       // 获取农历信息
       const lunarInfo = getLunarDetailInfo(date);
@@ -153,7 +156,10 @@ export async function POST(request: Request) {
     let chengguData = null;
     if (birthDate && birthTime) {
       try {
-        const date = new Date(birthDate);
+        // 解析本地日期字符串，避免时区转换导致的日期差异
+        const date = birthDate.includes('T') 
+          ? new Date(birthDate) // 保持兼容性，如果是完整时间字符串
+          : new Date(birthDate + 'T00:00:00'); // 如果是日期字符串，添加时间部分确保本地时间
         const lunarInfo = getLunarDetailInfo(date);
         
         // 从时间字符串中提取小时

@@ -72,8 +72,11 @@ function JianPiContent() {
 
         // 获取农历信息用于显示
         if (birthDate) {
-          const date = new Date(birthDate)
-          const lunar = getLunarDetailInfo(date)
+          // 解析本地日期字符串，避免时区转换
+          const dateParts = birthDate.includes('T') 
+            ? new Date(birthDate) // 保持兼容性，如果是完整时间字符串
+            : new Date(birthDate + 'T00:00:00') // 如果是日期字符串，添加时间部分确保本地时间
+          const lunar = getLunarDetailInfo(dateParts)
           setLunarInfo(lunar)
         }
 

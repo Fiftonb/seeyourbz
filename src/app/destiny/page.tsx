@@ -289,7 +289,9 @@ export default function DestinyPage() {
     // 构建查询参数，将八字信息和出生日期传递给简批结果页面
     const params = new URLSearchParams()
     params.set('eightChar', encodeURIComponent(JSON.stringify(structuredResult.eightChar)))
-    params.set('birthDate', encodeURIComponent(selectedDate.toISOString()))
+    // 使用本地日期格式而不是UTC时间，避免时区差异
+    const localDateString = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`
+    params.set('birthDate', encodeURIComponent(localDateString))
     params.set('birthTime', encodeURIComponent(timeInput))
     params.set('gender', encodeURIComponent(gender)) // 添加性别参数
     
