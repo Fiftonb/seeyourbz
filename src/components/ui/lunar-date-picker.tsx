@@ -44,6 +44,12 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
   // 组件引用，用于检测外部点击
   const containerRef = useRef<HTMLDivElement>(null)
   
+  // 年份输入框引用，用于优化焦点处理
+  const yearInputRef = useRef<HTMLInputElement>(null)
+  
+  // 添加一个标志位，避免在内部点击时触发外部点击逻辑
+  const [isInternalClick, setIsInternalClick] = useState(false)
+  
   // 初始化农历日期
   useEffect(() => {
     try {
@@ -58,7 +64,8 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
       const lunarYear = lunarMonth.getLunarYear()
       
       setLunarYear(lunarYear.getYear())
-      setLunarMonth(lunarMonth.getMonth())
+      // 使用 getMonthWithLeap() 来正确获取闰月值（闰月为负数）
+      setLunarMonth(lunarMonth.isLeap() ? -lunarMonth.getMonth() : lunarMonth.getMonth())
       setLunarDay(lunarDay.getDay())
       setYearInput(lunarYear.getYear().toString())
       setIsInitialized(true)
@@ -114,6 +121,12 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
     if (!isOpen) return
 
     const handleClickOutside = (event: MouseEvent) => {
+      // 如果是内部点击，不处理
+      if (isInternalClick) {
+        setIsInternalClick(false)
+        return
+      }
+      
       // 确保组件仍然存在且事件目标有效
       if (!containerRef.current || !event.target) {
         return
@@ -127,14 +140,14 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
 
     // 延迟添加事件监听器，避免立即触发
     const timeoutId = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside)
-    }, 0)
+      document.addEventListener('mousedown', handleClickOutside, true) // 使用捕获阶段
+    }, 100) // 增加延迟时间
 
     return () => {
       clearTimeout(timeoutId)
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('mousedown', handleClickOutside, true)
     }
-  }, [isOpen])
+  }, [isOpen, isInternalClick])
   
   // 年份选项已改为输入框，不再需要生成选项列表
   
@@ -181,6 +194,41 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
       m.month === Math.abs(lunarMonth) && m.isLeap === (lunarMonth < 0)
     )?.name || '正月'
     return `${lunarYear}年 ${monthName} ${lunarDay}日`
+  }
+
+  // 优化的年份验证和更新函数
+  const validateAndUpdateYear = (inputValue: string) => {
+    const year = parseInt(inputValue)
+    const currentYear = new Date().getFullYear()
+    const minYear = currentYear - 99
+    
+    // 只在年份真正发生变化时才更新状态
+    if (inputValue === '' || isNaN(year) || year < minYear || year > currentYear) {
+      const correctedYear = lunarYear // 使用当前年份而不是重置到今年
+      if (yearInput !== correctedYear.toString()) {
+        setYearInput(correctedYear.toString())
+      }
+    } else if (year !== lunarYear) {
+      setLunarYear(year)
+      setYearInput(year.toString())
+    }
+  }
+
+  // 处理日期点击
+  const handleDayClick = (day: number) => {
+    // 标记为内部点击
+    setIsInternalClick(true)
+    
+    // 先失焦年份输入框（如果有焦点的话）
+    if (yearInputRef.current && document.activeElement === yearInputRef.current) {
+      yearInputRef.current.blur()
+    }
+    
+    // 延迟执行日期更新，确保失焦事件先完成
+    setTimeout(() => {
+      setLunarDay(day)
+      setIsOpen(false)
+    }, 50)
   }
 
   return (
@@ -234,9 +282,10 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
             <div className="flex items-center space-x-2">
               {/* 年份输入框 */}
               <div className="flex items-center space-x-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400">输入年份:</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">年份:</span>
                 <div className="relative">
                   <input
+                    ref={yearInputRef}
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -248,33 +297,53 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
                         setYearInput(value)
                       }
                     }}
+                    onFocus={(e) => {
+                      // 获得焦点时自动选中所有文本，让用户可以直接输入覆盖
+                      ;(e.target as HTMLInputElement).select()
+                    }}
+                    onClick={(e) => {
+                      // 点击时也选中所有文本，确保用户体验一致
+                      ;(e.target as HTMLInputElement).select()
+                    }}
                     onBlur={(e) => {
-                      const value = e.target.value
-                      const year = parseInt(value)
-                      const currentYear = new Date().getFullYear()
-                      const minYear = currentYear - 99
-                      
-                      // 失焦时验证并修正年份
-                      if (value === '' || isNaN(year) || year < minYear || year > currentYear) {
-                        const correctedYear = currentYear
-                        setLunarYear(correctedYear)
-                        setYearInput(correctedYear.toString())
-                      } else {
-                        setLunarYear(year)
-                        setYearInput(year.toString())
-                      }
+                      validateAndUpdateYear(e.target.value)
                     }}
                     onKeyDown={(e) => {
+                      // Enter键确认并失焦
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur()
+                        return
+                      }
+                      
                       // 允许删除、方向键等控制键
                       if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
                         return
                       }
+                      
                       // 只允许数字输入
                       if (!/^\d$/.test(e.key)) {
                         e.preventDefault()
+                        return
                       }
+                      
+                      // 获取当前选中状态
+                      const input = e.currentTarget
+                      const selectionStart = input.selectionStart || 0
+                      const selectionEnd = input.selectionEnd || 0
+                      const currentValue = input.value
+                      
+                      // 计算输入后的新值长度
+                      let newValueLength
+                      if (selectionStart !== selectionEnd) {
+                        // 有文本被选中，计算替换后的长度
+                        newValueLength = currentValue.length - (selectionEnd - selectionStart) + 1
+                      } else {
+                        // 没有选中文本，就是插入
+                        newValueLength = currentValue.length + 1
+                      }
+                      
                       // 限制最大长度为4位
-                      if (e.currentTarget.value.length >= 4 && /^\d$/.test(e.key)) {
+                      if (newValueLength > 4) {
                         e.preventDefault()
                       }
                     }}
@@ -294,7 +363,7 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
 
               {/* 月份选择框 */}
               <div className="flex items-center space-x-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400">选择月份:</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">月份:</span>
                 <div className="relative">
                   <select
                     value={lunarMonth.toString()}
@@ -336,9 +405,11 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
               {calendarDays.map((day) => (
                 <button
                   key={day.day}
-                  onClick={() => {
-                    setLunarDay(day.day)
-                    setIsOpen(false)
+                  onClick={() => handleDayClick(day.day)}
+                  onMouseDown={(e) => {
+                    // 阻止默认的mousedown行为，避免和其他事件冲突
+                    e.preventDefault()
+                    setIsInternalClick(true)
                   }}
                   className={`
                     w-8 h-8 text-sm flex items-center justify-center rounded transition-colors duration-200
@@ -381,7 +452,7 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
                   console.error('重置今天失败:', error)
                 }
               }}
-              className="text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 px-2 py-1 rounded"
+              className="text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors"
             >
               今天
             </Button>
@@ -389,7 +460,7 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
             <Button
               plain
               onClick={() => setIsOpen(false)}
-              className="text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900/20 px-2 py-1 rounded"
+              className="text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900/20 px-2 py-1 rounded transition-colors"
             >
               关闭
             </Button>
