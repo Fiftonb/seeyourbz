@@ -379,7 +379,7 @@ export function Shengjiao() {
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-bold">掷圣筊</CardTitle>
+            <CardTitle className="text-lg font-bold">掷圣杯(圣筊)</CardTitle>
             <Button
               outline
               onClick={() => setShowRules(true)}

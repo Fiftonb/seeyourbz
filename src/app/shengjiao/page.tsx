@@ -9,7 +9,7 @@ export default function ShengjiaoPage() {
     <div className="min-h-screen space-y-8">
       <div className="text-center">
         <Heading level={1} className="mb-2">
-          掷圣筊
+          掷圣杯(圣筊)
         </Heading>
         <Text className="text-gray-600 dark:text-gray-400">
           传统民间占卜方式，通过掷筊杯求得神明指示，询问是否可行
