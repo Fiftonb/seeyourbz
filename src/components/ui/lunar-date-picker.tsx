@@ -199,11 +199,11 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
   // 优化的年份验证和更新函数
   const validateAndUpdateYear = (inputValue: string) => {
     const year = parseInt(inputValue)
-    const currentYear = new Date().getFullYear()
-    const minYear = currentYear - 99
+    const minYear = 1
+    const maxYear = 3999
     
     // 只在年份真正发生变化时才更新状态
-    if (inputValue === '' || isNaN(year) || year < minYear || year > currentYear) {
+    if (inputValue === '' || isNaN(year) || year < minYear || year > maxYear) {
       const correctedYear = lunarYear // 使用当前年份而不是重置到今年
       if (yearInput !== correctedYear.toString()) {
         setYearInput(correctedYear.toString())
@@ -354,8 +354,8 @@ export function LunarDatePicker({ value, onChange, className }: LunarDatePickerP
                       MozAppearance: 'textfield'
                     }}
                     onWheel={(e) => e.preventDefault()}
-                    min={new Date().getFullYear() - 99}
-                    max={new Date().getFullYear()}
+                    min={1}
+                    max={3999}
                     placeholder="年份"
                   />
                 </div>
