@@ -295,17 +295,10 @@ export function Shengjiao() {
     setResult(null);
     
     setTimeout(() => {
-      // 随机生成结果：圣筊(40%)、笑筊(30%)、哭筊(30%)
-      const random = Math.random();
-      let newResult: JiaoResult;
-      
-      if (random < 0.4) {
-        newResult = 'sheng';
-      } else if (random < 0.7) {
-        newResult = 'xiao';
-      } else {
-        newResult = 'ku';
-      }
+      // 使用数组随机选择，确保完全公平的概率分配
+      const results: JiaoResult[] = ['sheng', 'xiao', 'ku'];
+      const randomIndex = Math.floor(Math.random() * 3);
+      const newResult = results[randomIndex];
       
       setResult(newResult);
       setIsThrowing(false);
