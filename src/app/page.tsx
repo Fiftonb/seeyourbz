@@ -1,22 +1,11 @@
-import { SolarDay } from 'tyme4ts'
 import { CalendarDemo } from '@/components/CalendarDemo'
+import { TodayInfo } from '@/components/TodayInfo'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/divider'
-import { getSimpleConstellationFortune, scoreToStars, getScoreColor, type ConstellationType } from '@/lib/constellation-fortune'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
 
 export default function Home() {
-  const today = SolarDay.fromYmd(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())
-  const lunarDay = today.getLunarDay()
-  const constellation = today.getConstellation()
-  const term = today.getTerm()
-  
-  // 获取星座运势信息
-  const constellationFortune = getSimpleConstellationFortune(constellation.getName() as ConstellationType)
-
   return (
     <div className="space-y-8">
       {/* 欢迎标题区域 */}
@@ -31,131 +20,13 @@ export default function Home() {
 
       <Divider />
 
-      {/* 今日信息概览 */}
+      {/* 今日信息 */}
       <div className="space-y-6">
         <Heading level={2} className="text-2xl font-semibold text-gray-900 dark:text-white">
           今日信息
         </Heading>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 公历信息 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <Heading level={3} className="text-lg font-semibold">
-                公历
-              </Heading>
-              <Badge color="blue">今日</Badge>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">日期</Text>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {today.toString()}
-                </Text>
-              </div>
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">星期</Text>
-                <Badge color="green">
-                  {today.getWeek().getName()}
-                </Badge>
-              </div>
-              {term && (
-                <div>
-                  <Text className="text-sm text-gray-600 dark:text-gray-400">节气</Text>
-                  <Badge color="yellow">
-                    {term.getName()}
-                  </Badge>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 农历信息 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <Heading level={3} className="text-lg font-semibold">
-                农历
-              </Heading>
-              <Badge color="red">传统</Badge>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">农历日期</Text>
-                <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                  {lunarDay.toString()}
-                </Text>
-              </div>
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">干支纪日</Text>
-                <Badge color="orange">
-                  {lunarDay.getSixtyCycleDay().toString()}
-                </Badge>
-              </div>
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">年份</Text>
-                <Text className="text-lg font-medium text-gray-900 dark:text-white">
-                  {lunarDay.getYear().toString()}
-                </Text>
-              </div>
-            </div>
-          </div>
-
-          {/* 星座信息 */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <Heading level={3} className="text-lg font-semibold">
-                星座
-              </Heading>
-              <Badge color="purple">运势</Badge>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">当前星座</Text>
-                <div className="flex items-center space-x-2">
-                  <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {constellation.toString()}
-                  </Text>
-                  <Text className={`text-lg font-medium ${getScoreColor(constellationFortune.score)}`}>
-                    {scoreToStars(constellationFortune.score)}
-                  </Text>
-                </div>
-              </div>
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">今日运势</Text>
-                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {constellationFortune.description}
-                </Text>
-              </div>
-              <div>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">运势建议</Text>
-                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {constellationFortune.suggestion}
-                </Text>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">幸运色</Text>
-                    <Badge color="zinc" className="text-xs">
-                      {constellationFortune.luckyColor}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">运势评分</Text>
-                    <Text className={`text-sm font-semibold ${getScoreColor(constellationFortune.score)}`}>
-                      {constellationFortune.score}/5
-                    </Text>
-                  </div>
-                </div>
-                <Link href="/constellation">
-                  <Button outline className="text-xs py-1 px-2">
-                    查看详情
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TodayInfo />
       </div>
 
       <Divider />
