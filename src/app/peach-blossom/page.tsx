@@ -14,6 +14,7 @@ import { PeachBlossomResultComponent } from '@/components/peach-blossom/PeachBlo
 import { WeeklyFortune } from '@/components/peach-blossom/WeeklyFortune'
 import { PeachBlossomSuggestions } from '@/components/peach-blossom/PeachBlossomSuggestions'
 import { HeartIcon } from '@heroicons/react/24/outline'
+import { SolarTimeConfig, processSolarTimeConversion } from '@/lib/tyme'
 
 interface UserInput {
   birthDate: Date
@@ -21,6 +22,7 @@ interface UserInput {
   gender: 'male' | 'female'
   name: string
   dateType: 'solar' | 'lunar'
+  solarTimeConfig: SolarTimeConfig
 }
 
 export default function PeachBlossomPage() {
@@ -37,13 +39,22 @@ export default function PeachBlossomPage() {
       // 模拟计算过程
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // 这里使用Date对象而不是字符串
-      const birthDate = userInput.birthDate
+      // 构建完整的出生时间
       const [hour, minute] = userInput.birthTime.split(':').map(Number)
-      const birthTime = { hour, minute }
+      const fullBirthTime = new Date(userInput.birthDate)
+      fullBirthTime.setHours(hour, minute, 0, 0)
       
-      const peachBlossomResult = findPeachBlossoms(birthDate, birthTime)
-      const weeklyResult = calculateWeeklyPeachBlossomFortune(birthDate, birthTime)
+      // 处理真太阳时转换
+      const { finalTime } = processSolarTimeConversion(fullBirthTime, userInput.solarTimeConfig)
+      
+      // 使用转换后的时间进行计算
+      const birthTime = { 
+        hour: finalTime.getHours(), 
+        minute: finalTime.getMinutes() 
+      }
+      
+      const peachBlossomResult = findPeachBlossoms(finalTime, birthTime)
+      const weeklyResult = calculateWeeklyPeachBlossomFortune(finalTime, birthTime)
       
       setResult(peachBlossomResult)
       setWeeklyFortune(weeklyResult)
@@ -62,7 +73,8 @@ export default function PeachBlossomPage() {
               birthTime: userInput.birthTime,
               gender: userInput.gender,
               name: userInput.name,
-              dateType: userInput.dateType
+              dateType: userInput.dateType,
+              solarTimeConfig: userInput.solarTimeConfig
             },
             resultData: {
               peachBlossomResult,

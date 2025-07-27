@@ -7,6 +7,8 @@ import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { Badge } from '@/components/ui/badge'
 import { LunarDatePicker } from '@/components/ui/lunar-date-picker'
+import { SolarTimeConfigComponent } from '@/components/ui/solar-time-config'
+import { SolarTimeConfig } from '@/lib/tyme'
 import { CalendarIcon, ClockIcon, UserIcon, HeartIcon, SparklesIcon } from '@heroicons/react/16/solid'
 
 interface UserInput {
@@ -15,6 +17,7 @@ interface UserInput {
   gender: 'male' | 'female'
   name: string
   dateType: 'solar' | 'lunar'
+  solarTimeConfig: SolarTimeConfig
 }
 
 interface PeachBlossomFormProps {
@@ -34,6 +37,10 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
     gender: 'male',
     name: ''
   })
+  const [solarTimeConfig, setSolarTimeConfig] = useState<SolarTimeConfig>({
+    useSolarTime: false,
+    method: 'simple'
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +50,8 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
         birthTime: userInput.birthTime,
         gender: userInput.gender,
         name: userInput.name,
-        dateType
+        dateType,
+        solarTimeConfig
       })
     }
   }
@@ -234,6 +242,20 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
             </div>
           </div>
         </div>
+
+        {/* 真太阳时配置 */}
+        <SolarTimeConfigComponent
+          value={solarTimeConfig}
+          onChange={setSolarTimeConfig}
+          birthTime={(() => {
+            if (!userInput.birthTime) return undefined;
+            const [hours, minutes] = userInput.birthTime.split(':').map(Number)
+            const birthTime = new Date(selectedDate)
+            birthTime.setHours(hours, minutes, 0, 0)
+            return birthTime
+          })()}
+          showPreview={true}
+        />
 
         {/* 操作按钮区域 */}
         <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-pink-200 dark:border-pink-800">

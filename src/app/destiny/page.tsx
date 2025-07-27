@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/divider'
 import { LunarDatePicker } from '@/components/ui/lunar-date-picker'
-import { getCompleteEightCharInfo } from '@/lib/tyme'
+import { SolarTimeConfigComponent } from '@/components/ui/solar-time-config'
+import { getCompleteEightCharInfo, getCompleteEightCharInfoWithSolarTime, SolarTimeConfig } from '@/lib/tyme'
 import { CalendarIcon, ClockIcon, SparklesIcon } from '@heroicons/react/16/solid'
 import { useRouter } from 'next/navigation'
 
@@ -21,6 +22,10 @@ export default function DestinyPage() {
   const [timeInput, setTimeInput] = useState<string>('03:30')
   const [gender, setGender] = useState<'MAN' | 'WOMAN'>('MAN')
   const [startAge, setStartAge] = useState<number>(2)
+  const [solarTimeConfig, setSolarTimeConfig] = useState<SolarTimeConfig>({
+    useSolarTime: false,
+    method: 'simple'
+  })
   
   // 初始化路由
   const router = useRouter()
@@ -99,13 +104,20 @@ export default function DestinyPage() {
       console.log('出生时间:', birthTime)
       console.log('性别:', gender)
       
-      // 获取完整的八字信息
-      const eightCharInfo = getCompleteEightCharInfo(birthTime, gender)
+      // 获取完整的八字信息（支持真太阳时）
+      const result = solarTimeConfig.useSolarTime 
+        ? getCompleteEightCharInfoWithSolarTime(birthTime, gender, solarTimeConfig)
+        : { eightCharInfo: getCompleteEightCharInfo(birthTime, gender), timeConversion: undefined }
+      
+      const { eightCharInfo, timeConversion } = result
       
       console.log('八字信息:', eightCharInfo)
+      if (timeConversion) {
+        console.log('真太阳时转换:', timeConversion)
+      }
       
       // 生成结构化数据
-      const structuredData = formatResult(eightCharInfo)
+      const structuredData = formatResult(eightCharInfo, timeConversion)
       
       // 生成文本数据用于复制
       const resultText = generateTextResult(structuredData)
@@ -151,10 +163,10 @@ export default function DestinyPage() {
     } finally {
       setIsCalculating(false)
     }
-  }, [selectedDate, timeInput, gender, startAge, dateType])
+  }, [selectedDate, timeInput, gender, startAge, dateType, solarTimeConfig])
 
   // 格式化结果为结构化数据
-  const formatResult = (info: any) => {
+  const formatResult = (info: any, timeConversion?: any) => {
     console.log('Complete info:', info)
     
     const { eightChar, tenStarAnalysis, elementAnalysis, hideHeavenStemAnalysis, childLimit, decadeFortuneList } = info
@@ -168,6 +180,7 @@ export default function DestinyPage() {
     }
     
     return {
+      timeConversion, // 添加时间转换信息
       eightChar: {
         year: eightChar.year,
         month: eightChar.month,
@@ -610,12 +623,23 @@ export default function DestinyPage() {
 
           {/* 右侧：其他设置 */}
           <div className="space-y-6">
-
+            {/* 真太阳时配置 */}
+            <SolarTimeConfigComponent
+              value={solarTimeConfig}
+              onChange={setSolarTimeConfig}
+              birthTime={(() => {
+                const [hours, minutes] = timeInput.split(':').map(Number)
+                const birthTime = new Date(selectedDate)
+                birthTime.setHours(hours, minutes, 0, 0)
+                return birthTime
+              })()}
+              showPreview={true}
+            />
           </div>
         </div>
 
         {/* 操作按钮区域 */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto mt-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 计算按钮 */}
             <div className="bg-gradient-to-r from-red-50 to-blue-50 dark:from-red-900/20 dark:to-blue-900/20 rounded-lg p-6 border border-red-200 dark:border-red-800">
@@ -703,6 +727,38 @@ export default function DestinyPage() {
           </div>
           
           <div className="space-y-6">
+            {/* 时间转换信息 */}
+            {structuredResult.timeConversion && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between mb-4">
+                  <Heading level={3} className="text-lg font-semibold">
+                    真太阳时校正
+                  </Heading>
+                  <Badge color="blue">
+                    {structuredResult.timeConversion.method}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">标准时间</Text>
+                    <Text className="text-sm font-mono">{new Date(structuredResult.timeConversion.originalTime).toLocaleString('zh-CN')}</Text>
+                  </div>
+                  <div className="text-center">
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">真太阳时</Text>
+                    <Text className="text-sm font-mono text-blue-600 dark:text-blue-400">{new Date(structuredResult.timeConversion.solarTime).toLocaleString('zh-CN')}</Text>
+                  </div>
+                  <div className="text-center">
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">时间差异</Text>
+                    <Badge color="indigo" className="text-xs">{structuredResult.timeConversion.timeDifference}</Badge>
+                  </div>
+                  <div className="text-center">
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">使用经度</Text>
+                    <Text className="text-sm font-mono">{structuredResult.timeConversion.longitude.toFixed(4)}°</Text>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* 八字基本信息 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 八字四柱 */}

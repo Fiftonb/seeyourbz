@@ -25,6 +25,31 @@ import {
   Gender
 } from 'tyme4ts'
 
+import { 
+  calculateApparentSolarTime, 
+  calculateSimpleSolarTime, 
+  getCityCoordinates, 
+  getTimeDifference,
+  isValidLongitude 
+} from './solar-time'
+
+// 真太阳时配置接口
+export interface SolarTimeConfig {
+  useSolarTime: boolean      // 是否使用真太阳时
+  longitude?: number         // 经度（东经为正，西经为负）
+  city?: string             // 城市名称（会自动查找经度）
+  method?: 'accurate' | 'simple' // 计算方法：精确或简化
+}
+
+// 时间转换结果接口
+export interface TimeConversionResult {
+  originalTime: Date        // 原始时间
+  solarTime: Date          // 真太阳时
+  timeDifference: string   // 时间差异描述
+  longitude: number        // 使用的经度
+  method: string          // 使用的计算方法
+}
+
 // 基础日历信息接口
 export interface CalendarInfo {
   // 基础信息
@@ -58,6 +83,10 @@ export interface CalendarInfo {
   nineStar: string
   phase: string
   festival: string | null
+  
+  // 真太阳时信息
+  solarTimeConfig?: SolarTimeConfig
+  timeConversion?: TimeConversionResult
 }
 
 // 详细的农历信息接口
@@ -516,6 +545,17 @@ export function getEightCharInfo(date: Date): EightCharInfo {
 }
 
 /**
+ * 获取指定日期的八字信息（支持真太阳时）
+ * @param date - 日期对象
+ * @param solarTimeConfig - 真太阳时配置
+ * @returns 八字信息
+ */
+export function getEightCharInfoWithSolarTime(date: Date, solarTimeConfig?: SolarTimeConfig): EightCharInfo {
+  const { finalTime } = processSolarTimeConversion(date, solarTimeConfig)
+  return getEightCharInfo(finalTime)
+}
+
+/**
  * 检查指定日期是否为节气日
  * @param date - 日期对象
  * @returns 是否为节气日
@@ -627,6 +667,69 @@ export const HOUR_NAMES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未
 export const SEASON_NAMES = ['春', '夏', '秋', '冬']
 export const ZODIAC_NAMES = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪']
 export const CONSTELLATION_NAMES = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼']
+
+/**
+ * 处理真太阳时转换
+ * @param date - 原始时间
+ * @param config - 真太阳时配置
+ * @returns 转换后的时间和转换信息
+ */
+export function processSolarTimeConversion(date: Date, config?: SolarTimeConfig): { finalTime: Date, conversion?: TimeConversionResult } {
+  // 如果未配置或不使用真太阳时，直接返回原时间
+  if (!config || !config.useSolarTime) {
+    return { finalTime: date }
+  }
+  
+  let longitude: number
+  
+  // 获取经度
+  if (config.longitude !== undefined) {
+    if (!isValidLongitude(config.longitude)) {
+      throw new Error(`无效的经度值: ${config.longitude}，经度应在-180到180之间`)
+    }
+    longitude = config.longitude
+  } else if (config.city) {
+    const coordinates = getCityCoordinates(config.city)
+    if (!coordinates) {
+      throw new Error(`未找到城市"${config.city}"的坐标信息`)
+    }
+    longitude = coordinates.longitude
+  } else {
+    // 默认使用北京经度
+    longitude = 116.4074
+  }
+  
+  // 计算真太阳时
+  const method = config.method || 'simple'
+  const solarTime = method === 'accurate' 
+    ? calculateApparentSolarTime(date, longitude)
+    : calculateSimpleSolarTime(date, longitude)
+  
+  const conversion: TimeConversionResult = {
+    originalTime: date,
+    solarTime,
+    timeDifference: getTimeDifference(date, solarTime),
+    longitude,
+    method: method === 'accurate' ? '精确计算' : '简化计算'
+  }
+  
+  return { finalTime: solarTime, conversion }
+}
+
+/**
+ * 创建默认的真太阳时配置
+ * @param city - 城市名称
+ * @param longitude - 经度
+ * @returns 默认配置
+ */
+export function createSolarTimeConfig(city?: string, longitude?: number): SolarTimeConfig {
+  return {
+    useSolarTime: true,
+    city,
+    longitude,
+    method: 'simple'
+  }
+}
 
 /**
  * 从农历日期创建公历日期
@@ -1279,6 +1382,65 @@ export function getCompleteEightCharInfo(birthTime: Date, gender: 'MAN' | 'WOMAN
     // 宜忌
     tabooAnalysis: getTabooAnalysis(birthTime)
   }
+}
+
+/**
+ * 获取完整的八字排盘信息（支持真太阳时）
+ * @param birthTime - 出生时间
+ * @param gender - 性别 ('MAN' | 'WOMAN')
+ * @param solarTimeConfig - 真太阳时配置
+ * @returns 完整八字排盘信息和时间转换信息
+ */
+export function getCompleteEightCharInfoWithSolarTime(
+  birthTime: Date, 
+  gender: 'MAN' | 'WOMAN', 
+  solarTimeConfig?: SolarTimeConfig
+): { eightCharInfo: CompleteEightCharInfo, timeConversion?: TimeConversionResult } {
+  const { finalTime, conversion } = processSolarTimeConversion(birthTime, solarTimeConfig)
+  
+  const eightCharInfo = {
+    // 基础信息
+    birthTime: finalTime.toString(),
+    gender,
+    
+    // 八字四柱
+    eightChar: getEightCharInfo(finalTime),
+    
+    // 童限起运
+    childLimit: getChildLimitInfo(finalTime, gender),
+    
+    // 大运列表
+    decadeFortuneList: getDecadeFortuneList(finalTime, gender, 10),
+    
+    // 小运列表
+    fortuneList: getFortuneList(finalTime, gender, 10),
+    
+    // 十神分析
+    tenStarAnalysis: getTenStarAnalysis(finalTime),
+    
+    // 五行分析
+    elementAnalysis: getElementAnalysis(finalTime),
+    
+    // 藏干分析
+    hideHeavenStemAnalysis: getHideHeavenStemAnalysis(finalTime),
+    
+    // 长生十二神
+    terrainAnalysis: getTerrainAnalysis(finalTime),
+    
+    // 纳音
+    soundAnalysis: getSoundAnalysis(finalTime),
+    
+    // 空亡
+    emptyBranchAnalysis: getEmptyBranchAnalysis(finalTime),
+    
+    // 神煞
+    godAnalysis: getGodAnalysis(finalTime),
+    
+    // 宜忌
+    tabooAnalysis: getTabooAnalysis(finalTime)
+  }
+  
+  return { eightCharInfo, timeConversion: conversion }
 } 
 
 // 黄历信息接口

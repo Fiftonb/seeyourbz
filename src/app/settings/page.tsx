@@ -1,3 +1,5 @@
+'use client'
+
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Button } from '@/components/ui/button'
@@ -6,6 +8,7 @@ import { Divider } from '@/components/ui/divider'
 import { Switch } from '@/components/ui/switch'
 import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import React, { useState } from 'react'
 import { 
   Cog8ToothIcon, 
   BellIcon, 
@@ -17,6 +20,16 @@ import {
 } from '@heroicons/react/16/solid'
 
 export default function SettingsPage() {
+  // 外观设置
+  const [darkMode, setDarkMode] = useState(false)
+  const [compactMode, setCompactMode] = useState(false)
+  // 通知设置
+  const [desktopNotify, setDesktopNotify] = useState(false)
+  const [emailNotify, setEmailNotify] = useState(false)
+  const [eventNotify, setEventNotify] = useState(false)
+  // 高级设置
+  const [autoBackup, setAutoBackup] = useState(false)
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -79,7 +92,7 @@ export default function SettingsPage() {
                   切换到深色主题
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={darkMode} onChange={setDarkMode} />
             </div>
             
             <div className="flex items-center justify-between">
@@ -89,7 +102,7 @@ export default function SettingsPage() {
                   更紧凑的界面布局
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={compactMode} onChange={setCompactMode} />
             </div>
             
             <div>
@@ -121,7 +134,7 @@ export default function SettingsPage() {
                   允许桌面通知
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={desktopNotify} onChange={setDesktopNotify} />
             </div>
             
             <div className="flex items-center justify-between">
@@ -131,7 +144,7 @@ export default function SettingsPage() {
                   接收邮件通知
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={emailNotify} onChange={setEmailNotify} />
             </div>
             
             <div className="flex items-center justify-between">
@@ -141,7 +154,7 @@ export default function SettingsPage() {
                   日历事件提醒
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={eventNotify} onChange={setEventNotify} />
             </div>
           </div>
         </div>
@@ -163,7 +176,7 @@ export default function SettingsPage() {
                   自动备份数据
                 </Text>
               </div>
-              <Switch />
+              <Switch checked={autoBackup} onChange={setAutoBackup} />
             </div>
             
             <div className="flex items-center justify-between">
