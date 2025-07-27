@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import './fonts.css'
 import { ConditionalLayout } from '@/components/ConditionalLayout'
+import { ThemeProvider } from '@/lib/theme'
 import { interFont } from '@/lib/fonts'
 
 export const metadata: Metadata = {
@@ -39,7 +40,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${interFont.className} font-sans antialiased`}>
-        <ConditionalLayout>{children}</ConditionalLayout>
+        <ThemeProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </ThemeProvider>
       </body>
     </html>
   )

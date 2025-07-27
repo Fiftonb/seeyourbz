@@ -8,6 +8,7 @@ import { Divider } from '@/components/ui/divider'
 import { Switch } from '@/components/ui/switch'
 import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { useTheme } from '@/lib/theme'
 import React, { useState } from 'react'
 import { 
   Cog8ToothIcon, 
@@ -20,8 +21,8 @@ import {
 } from '@heroicons/react/16/solid'
 
 export default function SettingsPage() {
+  const { isDarkMode, setDarkMode } = useTheme()
   // 外观设置
-  const [darkMode, setDarkMode] = useState(false)
   const [compactMode, setCompactMode] = useState(false)
   // 通知设置
   const [desktopNotify, setDesktopNotify] = useState(false)
@@ -92,7 +93,7 @@ export default function SettingsPage() {
                   切换到深色主题
                 </Text>
               </div>
-              <Switch checked={darkMode} onChange={setDarkMode} />
+              <Switch checked={isDarkMode} onChange={setDarkMode} />
             </div>
             
             <div className="flex items-center justify-between">

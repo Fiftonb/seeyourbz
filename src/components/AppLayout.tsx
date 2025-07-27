@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/components/ui/avatar'
 import { LogoIcon } from '@/components/ui/logo'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import {
   Dropdown,
   DropdownButton,
@@ -24,7 +25,7 @@ import {
   UserIcon,
   ChartBarIcon,
 } from '@heroicons/react/16/solid'
-import { InboxIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -77,6 +78,7 @@ export function AppLayout({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+
   const [isLoaded, setIsLoaded] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [checkingAuth, setCheckingAuth] = useState(true)
@@ -158,12 +160,7 @@ export function AppLayout({
           </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
-            <NavbarItem href={"/search" as any} aria-label="搜索">
-              <MagnifyingGlassIcon />
-            </NavbarItem>
-            <NavbarItem href={"/inbox" as any} aria-label="收件箱">
-              <InboxIcon />
-            </NavbarItem>
+            <ThemeToggle />
             {!checkingAuth && (
               user ? (
                 <Dropdown>
