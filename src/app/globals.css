@@ -380,4 +380,66 @@ input[type="time"]::-webkit-datetime-edit-minute-field {
 
 .animate-delay-500 {
   animation-delay: 0.25s;
+}
+
+/* ============================================================================
+   HTML内容样式覆盖 - 解决数据库中颜色在黑暗模式下的显示问题
+   ============================================================================ */
+
+/* 处理数据库中的蓝色字体在黑暗模式下的显示 */
+font[color="#0000ff"],
+font[color="#0000FF"] {
+  color: #1e40af !important; /* 浅色模式下使用深蓝色 (blue-800) */
+}
+
+/* 黑暗模式下的颜色覆盖 */
+:root.dark font[color="#0000ff"],
+:root.dark font[color="#0000FF"],
+[data-theme="dark"] font[color="#0000ff"],
+[data-theme="dark"] font[color="#0000FF"] {
+  color: #60a5fa !important; /* 黑暗模式下使用亮蓝色 (blue-400) */
+}
+
+/* 媒体查询作为后备 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) font[color="#0000ff"],
+  :root:not([data-theme="light"]) font[color="#0000FF"] {
+    color: #60a5fa !important; /* 黑暗模式下使用亮蓝色 (blue-400) */
+  }
+}
+
+/* 通用的HTML内容区域样式 - 用于简批命理等页面 */
+.html-content font[color] {
+  font-weight: 500; /* 增加字体粗细以提高可读性 */
+}
+
+/* 确保在所有容器中都能正确应用 */
+div[dangerouslySetInnerHTML] font[color="#0000ff"],
+div[dangerouslySetInnerHTML] font[color="#0000FF"],
+.text-gray-700 font[color="#0000ff"],
+.text-gray-700 font[color="#0000FF"],
+.dark\\:text-gray-300 font[color="#0000ff"],
+.dark\\:text-gray-300 font[color="#0000FF"] {
+  color: #1e40af !important; /* 浅色模式 */
+}
+
+/* 黑暗模式下的特定容器 */
+:root.dark div[dangerouslySetInnerHTML] font[color="#0000ff"],
+:root.dark div[dangerouslySetInnerHTML] font[color="#0000FF"],
+:root.dark .text-gray-700 font[color="#0000ff"],
+:root.dark .text-gray-700 font[color="#0000FF"],
+[data-theme="dark"] div[dangerouslySetInnerHTML] font[color="#0000ff"],
+[data-theme="dark"] div[dangerouslySetInnerHTML] font[color="#0000FF"],
+[data-theme="dark"] .text-gray-700 font[color="#0000ff"],
+[data-theme="dark"] .text-gray-700 font[color="#0000FF"] {
+  color: #60a5fa !important; /* 黑暗模式 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) div[dangerouslySetInnerHTML] font[color="#0000ff"],
+  :root:not([data-theme="light"]) div[dangerouslySetInnerHTML] font[color="#0000FF"],
+  :root:not([data-theme="light"]) .text-gray-700 font[color="#0000ff"],
+  :root:not([data-theme="light"]) .text-gray-700 font[color="#0000FF"] {
+    color: #60a5fa !important;
+  }
 } 
