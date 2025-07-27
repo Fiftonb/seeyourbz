@@ -37,6 +37,7 @@ const navItems = [
   { label: '命理', url: '/destiny' },
   { label: '六爻卜卦', url: '/liuyao' },
   { label: '掷圣杯', url: '/shengjiao' },
+  { label: '敲木鱼', url: '/muyu' },
 ]
 
 
