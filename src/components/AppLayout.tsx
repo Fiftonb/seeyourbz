@@ -42,28 +42,28 @@ const navItems = [
 
 function UserDropdownMenu({ user, onLogout }: { user: any, onLogout: () => void }) {
   return (
-    <DropdownMenu className="min-w-64" anchor="bottom end">
+    <DropdownMenu className="min-w-40" anchor="bottom end">
       <DropdownItem href={"/profile" as any}>
-        <UserIcon />
+        <UserIcon className="w-4 h-4 mr-2 text-zinc-500" />
         <DropdownLabel>个人资料</DropdownLabel>
       </DropdownItem>
       {user?.isAdmin && (
         <>
           <DropdownDivider />
           <DropdownItem href={"/admin/submissions" as any}>
-            <ChartBarIcon />
+            <ChartBarIcon className="w-4 h-4 mr-2 text-zinc-500" />
             <DropdownLabel>管理中心</DropdownLabel>
           </DropdownItem>
         </>
       )}
       <DropdownDivider />
       <DropdownItem href={"/privacy" as any}>
-        <ShieldCheckIcon />
+        <ShieldCheckIcon className="w-4 h-4 mr-2 text-zinc-500" />
         <DropdownLabel>隐私政策</DropdownLabel>
       </DropdownItem>
       <DropdownDivider />
       <DropdownItem onClick={onLogout}>
-        <ArrowRightStartOnRectangleIcon />
+        <ArrowRightStartOnRectangleIcon className="w-4 h-4 mr-2 text-zinc-500" />
         <DropdownLabel>退出登录</DropdownLabel>
       </DropdownItem>
     </DropdownMenu>

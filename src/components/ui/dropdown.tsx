@@ -63,8 +63,8 @@ export function DropdownItem({
     'group cursor-default rounded-lg px-3.5 py-2.5 focus:outline-hidden sm:px-3 sm:py-1.5',
     // Text styles
     'text-left text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white forced-colors:text-[CanvasText]',
-    // Focus
-    'data-focus:bg-blue-500 data-focus:text-white',
+    // Focus and hover
+    'data-focus:bg-blue-500 data-focus:text-white hover:bg-blue-500 hover:text-white',
     // Disabled state
     'data-disabled:opacity-50',
     // Forced colors mode
@@ -73,7 +73,7 @@ export function DropdownItem({
     'col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] items-center supports-[grid-template-columns:subgrid]:grid-cols-subgrid',
     // Icons
     '*:data-[slot=icon]:col-start-1 *:data-[slot=icon]:row-start-1 *:data-[slot=icon]:mr-2.5 *:data-[slot=icon]:-ml-0.5 *:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:mr-2 sm:*:data-[slot=icon]:size-4',
-    '*:data-[slot=icon]:text-zinc-500 data-focus:*:data-[slot=icon]:text-white dark:*:data-[slot=icon]:text-zinc-400 dark:data-focus:*:data-[slot=icon]:text-white',
+    '*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:fill-zinc-500 data-focus:*:data-[slot=icon]:fill-white hover:*:data-[slot=icon]:fill-white dark:*:data-[slot=icon]:fill-zinc-400 dark:data-focus:*:data-[slot=icon]:fill-white dark:hover:*:data-[slot=icon]:fill-white',
     // Avatar
     '*:data-[slot=avatar]:mr-2.5 *:data-[slot=avatar]:-ml-1 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:mr-2 sm:*:data-[slot=avatar]:size-5'
   )
@@ -149,7 +149,7 @@ export function DropdownDescription({
       {...props}
       className={clsx(
         className,
-        'col-span-2 col-start-2 row-start-2 text-sm/5 text-zinc-500 group-data-focus:text-white sm:text-xs/5 dark:text-zinc-400 forced-colors:group-data-focus:text-[HighlightText]'
+        'col-span-2 col-start-2 row-start-2 text-sm/5 text-zinc-500 group-data-focus:text-white group-hover:text-white sm:text-xs/5 dark:text-zinc-400 forced-colors:group-data-focus:text-[HighlightText]'
       )}
     />
   )
@@ -170,7 +170,7 @@ export function DropdownShortcut({
         <kbd
           key={index}
           className={clsx([
-            'min-w-[2ch] text-center font-sans text-zinc-400 capitalize group-data-focus:text-white forced-colors:group-data-focus:text-[HighlightText]',
+            'min-w-[2ch] text-center font-sans text-zinc-400 capitalize group-data-focus:text-white group-hover:text-white forced-colors:group-data-focus:text-[HighlightText]',
             // Make sure key names that are longer than one character (like "Tab") have extra space
             index > 0 && char.length > 1 && 'pl-1',
           ])}
