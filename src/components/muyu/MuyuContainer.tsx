@@ -46,6 +46,8 @@ export function MuyuContainer() {
   const [selectedMusic, setSelectedMusic] = useState('buddhist')
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showControls, setShowControls] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine) // 添加在线状态
+  const [pendingTaps, setPendingTaps] = useState(0) // 添加待同步状态
   const [muyuData, setMuyuData] = useState<MuyuData>({
     totalCount: 0,
     todayCount: 0,
@@ -60,6 +62,11 @@ export function MuyuContainer() {
   const audioPoolRef = useRef<HTMLAudioElement[]>([])
   const currentPoolIndex = useRef<number>(0)
   const muyuWoodRef = useRef<MuyuWoodRef>(null)
+  
+  // 批量提交相关状态
+  const pendingTapsRef = useRef<number>(0) // 待提交的敲击次数
+  const isOnlineRef = useRef<boolean>(navigator.onLine)
+  const MAX_BATCH_SIZE = 50 // 最大批量大小
 
   // 初始化音效池
   useEffect(() => {
@@ -101,19 +108,62 @@ export function MuyuContainer() {
     }
   }, [])
 
-  // 保存到服务器
-  const saveToServer = useCallback(async (increment: number) => {
+  // 批量提交待处理的敲击数据
+  const submitPendingTaps = useCallback(async () => {
+    if (pendingTapsRef.current <= 0 || !isOnlineRef.current) {
+      return
+    }
+    
+    const tapsToSubmit = pendingTapsRef.current
+    pendingTapsRef.current = 0 // 先重置，避免重复提交
+    setPendingTaps(0) // 同步更新state
+    
     try {
       await fetch('/api/muyu/stats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ increment })
+        body: JSON.stringify({ increment: tapsToSubmit })
       })
+      console.log(`批量提交 ${tapsToSubmit} 次敲击成功`)
     } catch (error) {
-      console.error('保存到服务器失败:', error)
+      console.error('批量提交失败:', error)
+      // 提交失败时，将数据重新加回待提交队列
+      pendingTapsRef.current += tapsToSubmit
+      setPendingTaps(pendingTapsRef.current) // 同步更新state
     }
+  }, [])
+
+  // 添加敲击到批量队列
+  const addTapToBatch = useCallback(() => {
+    pendingTapsRef.current += 1
+    setPendingTaps(pendingTapsRef.current) // 同步更新state
+    
+    // 如果达到最大批量大小，立即提交
+    if (pendingTapsRef.current >= MAX_BATCH_SIZE) {
+      submitPendingTaps()
+      return
+    }
+  }, [submitPendingTaps])
+  
+  // 保存到服务器（改为添加到批量队列）
+  const saveToServer = useCallback(async (increment: number) => {
+    addTapToBatch()
+  }, [addTapToBatch])
+
+  // 优化本地存储 - 使用防抖机制
+  const localStorageTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const saveToLocalStorage = useCallback((data: MuyuData) => {
+    // 清除之前的定时器
+    if (localStorageTimerRef.current) {
+      clearTimeout(localStorageTimerRef.current)
+    }
+    
+    // 延迟保存，避免频繁写入
+    localStorageTimerRef.current = setTimeout(() => {
+      localStorage.setItem('muyu-data', JSON.stringify(data))
+    }, 500) // 500ms 防抖
   }, [])
 
   // 播放音效（使用音效池）
@@ -129,6 +179,31 @@ export function MuyuContainer() {
       currentPoolIndex.current = (currentPoolIndex.current + 1) % audioPoolRef.current.length
     }
   }, [])
+
+  // 监听网络状态
+  useEffect(() => {
+    const handleOnline = () => {
+      isOnlineRef.current = true
+      setIsOnline(true)
+      // 网络恢复时立即提交待处理的数据
+      if (pendingTapsRef.current > 0) {
+        submitPendingTaps()
+      }
+    }
+    
+    const handleOffline = () => {
+      isOnlineRef.current = false
+      setIsOnline(false)
+    }
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [submitPendingTaps])
 
   // 敲击木鱼（优化音效同步）
   const handleTap = useCallback((isManual: boolean = true) => {
@@ -172,17 +247,15 @@ export function MuyuContainer() {
         sessionCount: 0 // sessionCount不保存到localStorage，每次会话重新开始
       }
 
-      // 异步保存到本地存储，避免阻塞
-      setTimeout(() => {
-        localStorage.setItem('muyu-data', JSON.stringify(newData))
-      }, 0)
+      // 使用防抖机制保存到本地存储
+      saveToLocalStorage(newData)
 
       return newData
     })
 
-    // 异步保存到服务器，避免阻塞
+    // 添加到批量提交队列，避免阻塞
     setTimeout(() => saveToServer(1), 0)
-  }, [playTapSound, saveToServer])
+  }, [playTapSound, saveToServer, saveToLocalStorage])
 
 
 
@@ -269,6 +342,22 @@ export function MuyuContainer() {
     return () => {
       if (autoIntervalRef.current) {
         clearInterval(autoIntervalRef.current)
+      }
+    }
+  }, [])
+
+  // 组件卸载时清理所有定时器
+  useEffect(() => {
+    return () => {
+      if (pendingTapsRef.current > 0 && isOnlineRef.current) {
+        // 使用 sendBeacon API 进行最后的数据提交
+        navigator.sendBeacon('/api/muyu/stats', JSON.stringify({ 
+          increment: pendingTapsRef.current 
+        }))
+      }
+      
+      if (localStorageTimerRef.current) {
+        clearTimeout(localStorageTimerRef.current)
       }
     }
   }, [])
@@ -414,6 +503,25 @@ export function MuyuContainer() {
                     </div>
                   </Button>
                 </div>
+
+                {/* 数据同步状态 */}
+                {(!isOnline || pendingTaps > 0) && (
+                  <div className="bg-black/20 dark:bg-black/20 bg-amber-50/80 backdrop-blur-sm rounded-lg p-3 border border-amber-400/20 dark:border-amber-400/20 border-amber-600/30">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                        <span className="text-amber-200/90 dark:text-amber-200/90 text-amber-800">
+                          {isOnline ? '已连接' : '离线状态'}
+                        </span>
+                      </div>
+                      {pendingTaps > 0 && (
+                        <span className="text-amber-300/70 dark:text-amber-300/70 text-amber-700 text-xs">
+                          待同步: {pendingTaps}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* 功德统计 */}
                 <div className="space-y-4">
