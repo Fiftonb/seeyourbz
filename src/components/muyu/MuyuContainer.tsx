@@ -36,8 +36,7 @@ const bgMusicOptions = [
 const autoSpeedOptions = [
   { value: 1000, label: '缓慢 (1秒)' },
   { value: 800, label: '适中 (0.8秒)' },
-  { value: 600, label: '较快 (0.6秒)' },
-  { value: 400, label: '快速 (0.4秒)' }
+  { value: 600, label: '较快 (0.6秒)' }
 ]
 
 export function MuyuContainer() {
@@ -57,6 +56,22 @@ export function MuyuContainer() {
   const autoIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
+  const lastTapTime = useRef<number>(0)
+  const audioPoolRef = useRef<HTMLAudioElement[]>([])
+  const currentPoolIndex = useRef<number>(0)
+
+  // 初始化音效池
+  useEffect(() => {
+    // 创建3个音效实例以避免重叠
+    const audioPool = []
+    for (let i = 0; i < 3; i++) {
+      const audio = new Audio('/audio/muyu-tap.mp3')
+      audio.preload = 'auto'
+      audioPool.push(audio)
+    }
+    audioPoolRef.current = audioPool
+    audioRef.current = audioPool[0] // 兼容原有代码
+  }, [])
 
   // 加载本地数据
   useEffect(() => {
@@ -92,8 +107,26 @@ export function MuyuContainer() {
     }
   }, [])
 
-  // 敲击木鱼
-  const handleTap = useCallback(() => {
+  // 播放音效（使用音效池）
+  const playTapSound = useCallback(() => {
+    if (audioPoolRef.current.length > 0) {
+      const audio = audioPoolRef.current[currentPoolIndex.current]
+      audio.currentTime = 0
+      audio.play().catch(console.error)
+      currentPoolIndex.current = (currentPoolIndex.current + 1) % audioPoolRef.current.length
+    }
+  }, [])
+
+  // 敲击木鱼（带节流）
+  const handleTap = useCallback((isManual: boolean = true) => {
+    const now = Date.now()
+    
+    // 手动敲击时添加节流（最小间隔300ms）
+    if (isManual && now - lastTapTime.current < 300) {
+      return
+    }
+    
+    lastTapTime.current = now
     const today = new Date().toDateString()
     
     // 更新本次修行计数
@@ -122,11 +155,8 @@ export function MuyuContainer() {
     saveToServer(1)
 
     // 播放敲击音效
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0
-      audioRef.current.play().catch(console.error)
-    }
-  }, [])
+    playTapSound()
+  }, [playTapSound, saveToServer])
 
 
 
@@ -142,7 +172,7 @@ export function MuyuContainer() {
     } else {
       // 开启自动模式
       autoIntervalRef.current = setInterval(() => {
-        handleTap()
+        handleTap(false) // 自动模式不使用节流
       }, autoSpeed)
       setIsAutoMode(true)
     }
@@ -180,7 +210,7 @@ export function MuyuContainer() {
     if (isAutoMode && autoIntervalRef.current) {
       clearInterval(autoIntervalRef.current)
       autoIntervalRef.current = setInterval(() => {
-        handleTap()
+        handleTap(false) // 自动模式不使用节流
       }, speed)
     }
   }, [isAutoMode, handleTap])
@@ -228,7 +258,7 @@ export function MuyuContainer() {
         <h1 className="text-4xl md:text-5xl font-light text-amber-100 dark:text-amber-100 text-amber-900 mb-3 tracking-wide">
           沉浸式敲木鱼
         </h1>
-        <p className="text-amber-200/80 dark:text-amber-200/80 text-amber-800/90 text-base md:text-lg tracking-wider font-light">
+        <p className="text-amber-200/80 dark:text-amber-200/80 text-amber-800 text-base md:text-lg tracking-wider font-medium">
           静心修身，功德无量
         </p>
         
@@ -240,13 +270,13 @@ export function MuyuContainer() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="bg-green-600/30 dark:bg-green-600/30 bg-green-200/50 backdrop-blur-md rounded-lg px-6 py-3 border border-green-400/40 dark:border-green-400/40 border-green-600/50 inline-block">
-              <p className="text-base text-green-200/90 dark:text-green-200/90 text-green-800/90 tracking-wide font-light">
+            <div className="bg-green-600/30 dark:bg-green-600/30 bg-green-50/80 backdrop-blur-md rounded-lg px-6 py-3 border border-green-400/40 dark:border-green-400/40 border-green-600/60 inline-block">
+              <p className="text-base text-green-200/90 dark:text-green-200/90 text-green-900 tracking-wide font-medium">
                 自动修行中
               </p>
               <div className="flex items-center justify-center mt-1">
                 <div className="w-2 h-2 bg-green-400 dark:bg-green-400 bg-green-600 rounded-full animate-pulse mr-2"></div>
-                <p className="text-sm text-green-300/80 dark:text-green-300/80 text-green-700/90 tracking-wider font-light">
+                <p className="text-sm text-green-300/80 dark:text-green-300/80 text-green-800 tracking-wider font-medium">
                   功德持续累积
                 </p>
               </div>
@@ -257,7 +287,7 @@ export function MuyuContainer() {
 
       {/* 浮动控制按钮 */}
       <motion.button
-        className="fixed top-20 right-6 z-30 w-12 h-12 bg-black/20 dark:bg-black/20 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-amber-200/80 dark:text-amber-200/80 text-amber-700/90 hover:text-amber-100 dark:hover:text-amber-100 hover:text-amber-900 hover:bg-black/30 dark:hover:bg-black/30 hover:bg-white/40 transition-all duration-300"
+        className="fixed top-20 right-6 z-30 w-12 h-12 bg-black/20 dark:bg-black/20 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-amber-200/80 dark:text-amber-200/80 text-amber-800 hover:text-amber-100 dark:hover:text-amber-100 hover:text-amber-900 hover:bg-black/30 dark:hover:bg-black/30 hover:bg-white/40 transition-all duration-300"
         onClick={() => setShowControls(!showControls)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -285,14 +315,14 @@ export function MuyuContainer() {
                 <div className="space-y-4">
                   <h3 className="text-amber-100 dark:text-amber-100 text-amber-900 font-medium text-base tracking-wide">敲击模式</h3>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-amber-200/80 dark:text-amber-200/80 text-amber-800/90 text-sm font-light">手动</span>
-                      <Switch
-                        checked={isAutoMode}
-                        onChange={toggleAutoMode}
-                      />
-                      <span className="text-amber-200/80 dark:text-amber-200/80 text-amber-800/90 text-sm font-light">自动</span>
-                    </div>
+                                      <div className="flex items-center space-x-4">
+                    <span className="text-amber-200/80 dark:text-amber-200/80 text-amber-900 text-sm font-medium">手动</span>
+                    <Switch
+                      checked={isAutoMode}
+                      onChange={toggleAutoMode}
+                    />
+                    <span className="text-amber-200/80 dark:text-amber-200/80 text-amber-900 text-sm font-medium">自动</span>
+                  </div>
                   </div>
                   {isAutoMode && (
                     <Select
@@ -325,7 +355,7 @@ export function MuyuContainer() {
                   </Select>
                   <Button
                     onClick={toggleMusic}
-                    className="w-full bg-amber-600/20 dark:bg-amber-600/20 bg-amber-200/30 hover:bg-amber-600/30 dark:hover:bg-amber-600/30 hover:bg-amber-300/40 border-amber-400/30 dark:border-amber-400/30 border-amber-600/40 text-amber-100 dark:text-amber-100 text-amber-900 font-light"
+                    className="w-full bg-amber-600/20 dark:bg-amber-600/20 bg-amber-200/30 hover:bg-amber-600/30 dark:hover:bg-amber-600/30 hover:bg-amber-300/40 border-amber-400/30 dark:border-amber-400/30 border-amber-600/40 text-amber-100 dark:text-amber-100 text-amber-900 font-medium"
                   >
                     <div className="flex items-center justify-center">
                       {isMusicPlaying ? (
@@ -390,14 +420,14 @@ export function MuyuContainer() {
         )}
         
         <div className="space-y-3">
-          <p className="text-amber-200/90 dark:text-amber-200/90 text-amber-800/90 text-base md:text-lg font-light tracking-wide">
+          <p className="text-amber-200/90 dark:text-amber-200/90 text-amber-800 text-base md:text-lg font-medium tracking-wide">
             {tapCount > 0 ? '阿弥陀佛，功德无量' : '点击木鱼，开始修行'}
           </p>
           {tapCount > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-sm text-amber-300/70 dark:text-amber-300/70 text-amber-700/80 font-light tracking-wide"
+              className="text-sm text-amber-300/70 dark:text-amber-300/70 text-amber-700 font-medium tracking-wide"
             >
               今日已修行 {muyuData.todayCount} 次
             </motion.div>

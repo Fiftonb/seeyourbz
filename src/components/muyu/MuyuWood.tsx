@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 interface MuyuWoodProps {
-  onTap: () => void
+  onTap: (isManual?: boolean) => void
   isAutoMode: boolean
   tapCount: number
 }
@@ -28,7 +28,7 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
     
     setIsPressed(true)
     setShowRipple(true)
-    onTap()
+    onTap(true) // 手动点击
     
     setTimeout(() => setIsPressed(false), 150)
     setTimeout(() => setShowRipple(false), 600)
