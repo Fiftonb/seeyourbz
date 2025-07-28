@@ -9,9 +9,18 @@ interface MuyuWoodProps {
   tapCount: number
 }
 
+// 木鱼颜色选项
+const muyuColors = [
+  { value: 'red', label: '红木', image: '/muyu/muyutou_red.png' },
+  { value: 'yellow', label: '黄木', image: '/muyu/muyutou_yellow.png' },
+  { value: 'white', label: '白木', image: '/muyu/muyutou_white.png' },
+  { value: 'silver', label: '银木', image: '/muyu/muyutou_sliver.png' }
+]
+
 export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
   const [isPressed, setIsPressed] = useState(false)
   const [showRipple, setShowRipple] = useState(false)
+  const [selectedColor, setSelectedColor] = useState('red') // 默认使用红木
 
   // 点击动画效果
   const handleClick = () => {
@@ -41,15 +50,47 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
     }
   }, [tapCount, isAutoMode])
 
+  // 获取当前选择的木鱼图片
+  const currentMuyu = muyuColors.find(color => color.value === selectedColor)
+
   return (
     <div className="relative">
+      {/* 木鱼颜色选择器 */}
+      <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="flex space-x-2 bg-black/20 backdrop-blur-md rounded-full px-4 py-2 border border-amber-400/20">
+          {muyuColors.map((color) => (
+            <button
+              key={color.value}
+              onClick={() => setSelectedColor(color.value)}
+              className={`
+                w-8 h-8 rounded-full border-2 transition-all duration-300 relative overflow-hidden
+                ${selectedColor === color.value 
+                  ? 'border-amber-400 scale-110 shadow-lg' 
+                  : 'border-amber-600/40 hover:border-amber-500/60 hover:scale-105'
+                }
+              `}
+              title={color.label}
+            >
+              <img 
+                src={color.image} 
+                alt={color.label}
+                className="w-full h-full object-cover"
+              />
+              {selectedColor === color.value && (
+                <div className="absolute inset-0 bg-amber-400/20 rounded-full"></div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 木鱼底座光环 */}
-      <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-8 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent rounded-full blur-md"></div>
+      <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-8 bg-gradient-to-r from-transparent via-amber-700/20 to-transparent rounded-full blur-md"></div>
       
       {/* 木鱼主体 */}
       <motion.div
         className={`
-          relative w-48 h-36 cursor-pointer select-none
+          relative w-48 h-32 cursor-pointer select-none
           ${isAutoMode ? 'cursor-default' : 'cursor-pointer'}
         `}
         onClick={handleClick}
@@ -66,55 +107,33 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
         }}
       >
         {/* 外部光晕 */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/30 via-transparent to-amber-600/30 blur-xl scale-110"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/20 via-transparent to-amber-800/30 blur-xl scale-110 rounded-full"></div>
         
-        {/* 木鱼外壳 */}
+        {/* 木鱼图片 */}
         <div className={`
-          relative w-full h-full rounded-full
-          bg-gradient-to-br from-amber-500 via-amber-600 to-amber-800
-          shadow-2xl border-2 border-amber-400/60
-          overflow-hidden
-          ${isPressed ? 'shadow-lg border-amber-300/80' : 'shadow-2xl'}
+          relative w-full h-full flex items-center justify-center
+          ${isPressed ? 'drop-shadow-lg' : 'drop-shadow-2xl'}
           transition-all duration-150
         `}>
-          {/* 内部光晕 */}
-          <div className="absolute inset-1 rounded-full bg-gradient-to-br from-amber-300/40 via-transparent to-transparent"></div>
+          <img 
+            src={currentMuyu?.image} 
+            alt={`${currentMuyu?.label}木鱼`}
+            className="w-full h-full object-contain filter drop-shadow-2xl"
+            style={{
+              filter: `drop-shadow(0 10px 30px rgba(0,0,0,0.3)) ${isPressed ? 'brightness(1.1)' : 'brightness(1)'}`
+            }}
+          />
           
-          {/* 木纹纹理 */}
-          <div className="absolute inset-0 rounded-full opacity-60">
-            <div className="absolute top-3 left-6 w-20 h-1.5 bg-amber-400/40 rounded-full transform rotate-12 blur-[0.5px]"></div>
-            <div className="absolute top-8 right-8 w-16 h-1.5 bg-amber-400/40 rounded-full transform -rotate-6 blur-[0.5px]"></div>
-            <div className="absolute bottom-6 left-10 w-24 h-1.5 bg-amber-400/40 rounded-full transform rotate-3 blur-[0.5px]"></div>
-            <div className="absolute bottom-8 right-6 w-12 h-1.5 bg-amber-400/40 rounded-full transform -rotate-12 blur-[0.5px]"></div>
-            <div className="absolute top-1/2 left-4 w-8 h-1 bg-amber-300/30 rounded-full transform rotate-45 blur-[0.5px]"></div>
-            <div className="absolute top-1/3 right-4 w-10 h-1 bg-amber-300/30 rounded-full transform -rotate-30 blur-[0.5px]"></div>
-          </div>
-
-          {/* 主要高光效果 */}
-          <div className="absolute top-3 left-6 w-12 h-20 bg-gradient-to-br from-white/40 to-transparent rounded-full blur-sm"></div>
-          <div className="absolute top-6 right-8 w-8 h-12 bg-gradient-to-bl from-white/25 to-transparent rounded-full blur-sm"></div>
-          
-          {/* 木鱼开口 */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-20 h-4 bg-amber-900/90 rounded-full shadow-inner">
-            <div className="absolute inset-0.5 bg-amber-800/80 rounded-full"></div>
-          </div>
-          
-          {/* 中心装饰莲花图案 */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-inner border border-amber-400/60 flex items-center justify-center">
-              <div className="text-amber-800/80 text-xs">🪷</div>
-            </div>
-          </div>
-          
-          {/* 装饰性圆圈 */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-amber-400/30 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border border-amber-400/20 rounded-full"></div>
+          {/* 敲击高光效果 */}
+          {isPressed && (
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent rounded-full blur-sm"></div>
+          )}
         </div>
 
         {/* 敲击波纹效果 */}
         {showRipple && (
           <motion.div
-            className="absolute top-1/2 left-1/2 w-6 h-6 rounded-full border-2 border-amber-200/80"
+            className="absolute top-1/2 left-1/2 w-6 h-6 rounded-full border-2 border-yellow-200/80"
             style={{
               transform: 'translate(-50%, -50%)',
             }}
@@ -137,16 +156,11 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
           ease: "easeOut"
         }}
       >
-        {/* 木槌手柄 */}
-        <div className="w-4 h-20 bg-gradient-to-b from-amber-700 to-amber-900 rounded-full shadow-lg relative">
-          {/* 手柄纹理 */}
-          <div className="absolute top-4 left-0.5 w-3 h-12 bg-gradient-to-b from-amber-600/50 to-amber-800/50 rounded-full"></div>
-          
-          {/* 木槌头 */}
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full shadow-md">
-            <div className="w-full h-full bg-gradient-to-br from-amber-500/60 to-transparent rounded-full"></div>
-          </div>
-        </div>
+        <img 
+          src="/muyu/gunzi.png" 
+          alt="木槌"
+          className="w-8 h-20 object-contain filter drop-shadow-lg"
+        />
       </motion.div>
 
       {/* 功德粒子效果 */}
@@ -155,7 +169,7 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1.5 h-1.5 bg-amber-300 rounded-full"
+              className="absolute w-1.5 h-1.5 bg-yellow-600 rounded-full"
               initial={{ 
                 x: 0, 
                 y: 0,
@@ -179,7 +193,7 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
           {[...Array(12)].map((_, i) => (
             <motion.div
               key={`extra-${i}`}
-              className="absolute w-0.5 h-0.5 bg-yellow-200 rounded-full"
+              className="absolute w-0.5 h-0.5 bg-amber-400 rounded-full"
               initial={{ 
                 x: 0, 
                 y: 0,
@@ -201,8 +215,6 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
           ))}
         </div>
       )}
-
-
     </div>
   )
 } 
