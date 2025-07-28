@@ -83,19 +83,6 @@ export function MuyuContainer() {
     }
   }, [])
 
-  // 初始化音效池
-  // useEffect(() => {
-  //   // 创建5个音效实例以避免重叠（增加容量）
-  //   const audioPool = []
-  //   for (let i = 0; i < 5; i++) {
-  //     const audio = new Audio('/audio/muyu-tap.mp3')
-  //     audio.preload = 'auto'
-  //     audio.volume = 1.0 // 敲击声音调大，比背景音乐突出
-  //     audioPool.push(audio)
-  //   }
-  //   audioPoolRef.current = audioPool
-  //   audioRef.current = audioPool[0] // 兼容原有代码
-  // }, [])
 
   // 初始化音效（采用移动端兼容的单音频方案）
   useEffect(() => {
@@ -558,7 +545,7 @@ export function MuyuContainer() {
                         音频状态
                       </span>
                       <span className="text-amber-300/80 dark:text-amber-300/80 text-amber-700">
-                        {audioUnlockedRef.current ? '已解锁' : '未解锁'}
+                        {isMobile ? (audioUnlockedRef.current ? '已解锁' : '未解锁') : '就绪'}
                       </span>
                     </div>
                   </div>
