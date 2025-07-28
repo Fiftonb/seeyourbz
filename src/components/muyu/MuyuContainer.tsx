@@ -8,7 +8,7 @@ import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Switch } from '@/components/ui/switch'
 import { Select } from '@/components/ui/select'
-import { MuyuWood } from '@/components/muyu/MuyuWood'
+import { MuyuWood, MuyuWoodRef } from './MuyuWood'
 import { MuyuStats } from '@/components/muyu/MuyuStats'
 import { 
   PlayIcon, 
@@ -34,15 +34,15 @@ const bgMusicOptions = [
 ]
 
 const autoSpeedOptions = [
-  { value: 1000, label: '缓慢 (1秒)' },
-  { value: 800, label: '适中 (0.8秒)' },
-  { value: 600, label: '较快 (0.6秒)' }
+  { value: 1200, label: '缓慢 (1.2秒)' },
+  { value: 1000, label: '适中 (1秒)' },
+  { value: 800, label: '较快 (0.8秒)' }
 ]
 
 export function MuyuContainer() {
   const [tapCount, setTapCount] = useState(0)
   const [isAutoMode, setIsAutoMode] = useState(false)
-  const [autoSpeed, setAutoSpeed] = useState(800)
+  const [autoSpeed, setAutoSpeed] = useState(1000) // 修正为1000ms，与"适中"选项一致
   const [selectedMusic, setSelectedMusic] = useState('buddhist')
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showControls, setShowControls] = useState(false)
@@ -59,14 +59,16 @@ export function MuyuContainer() {
   const lastTapTime = useRef<number>(0)
   const audioPoolRef = useRef<HTMLAudioElement[]>([])
   const currentPoolIndex = useRef<number>(0)
+  const muyuWoodRef = useRef<MuyuWoodRef>(null)
 
   // 初始化音效池
   useEffect(() => {
-    // 创建3个音效实例以避免重叠
+    // 创建5个音效实例以避免重叠（增加容量）
     const audioPool = []
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const audio = new Audio('/audio/muyu-tap.mp3')
       audio.preload = 'auto'
+      audio.volume = 0.8 // 设置适中的音量
       audioPool.push(audio)
     }
     audioPoolRef.current = audioPool
@@ -111,13 +113,17 @@ export function MuyuContainer() {
   const playTapSound = useCallback(() => {
     if (audioPoolRef.current.length > 0) {
       const audio = audioPoolRef.current[currentPoolIndex.current]
+      // 重置播放位置并立即播放
       audio.currentTime = 0
-      audio.play().catch(console.error)
+      const playPromise = audio.play()
+      if (playPromise) {
+        playPromise.catch(console.error)
+      }
       currentPoolIndex.current = (currentPoolIndex.current + 1) % audioPoolRef.current.length
     }
   }, [])
 
-  // 敲击木鱼（带节流）
+  // 敲击木鱼（优化音效同步）
   const handleTap = useCallback((isManual: boolean = true) => {
     const now = Date.now()
     
@@ -126,13 +132,27 @@ export function MuyuContainer() {
       return
     }
     
+    // 自动模式也需要最小间隔检查，防止过快敲击
+    if (!isManual && now - lastTapTime.current < 100) {
+      return
+    }
+    
     lastTapTime.current = now
+    
+    // 立即播放音效，确保与动画同步
+    playTapSound()
+    
+    // 直接触发动画，避免React渲染延迟
+    if (!isManual && muyuWoodRef.current) {
+      muyuWoodRef.current.triggerAnimation()
+    }
+    
     const today = new Date().toDateString()
     
     // 更新本次修行计数
     setTapCount(prev => prev + 1)
     
-    // 更新数据统计
+    // 更新数据统计（优化为批量更新）
     setMuyuData(prevData => {
       // 如果是新的一天，今日计数从1开始，否则累加1
       const newTodayCount = prevData.lastTapDate === today ? prevData.todayCount + 1 : 1
@@ -145,22 +165,21 @@ export function MuyuContainer() {
         sessionCount: 0 // sessionCount不保存到localStorage，每次会话重新开始
       }
 
-      // 保存到本地存储（不保存sessionCount）
-      localStorage.setItem('muyu-data', JSON.stringify(newData))
+      // 异步保存到本地存储，避免阻塞
+      setTimeout(() => {
+        localStorage.setItem('muyu-data', JSON.stringify(newData))
+      }, 0)
 
       return newData
     })
 
-    // 保存到服务器JSON文件（传递增量+1）
-    saveToServer(1)
-
-    // 播放敲击音效
-    playTapSound()
+    // 异步保存到服务器，避免阻塞
+    setTimeout(() => saveToServer(1), 0)
   }, [playTapSound, saveToServer])
 
 
 
-  // 自动模式切换
+  // 自动模式切换（优化）
   const toggleAutoMode = useCallback(() => {
     if (isAutoMode) {
       // 关闭自动模式
@@ -171,12 +190,27 @@ export function MuyuContainer() {
       setIsAutoMode(false)
     } else {
       // 开启自动模式
+      // 确保间隔时间不小于800ms，给动画留足时间
+      const safeInterval = Math.max(autoSpeed, 800)
       autoIntervalRef.current = setInterval(() => {
         handleTap(false) // 自动模式不使用节流
-      }, autoSpeed)
+      }, safeInterval)
       setIsAutoMode(true)
     }
   }, [isAutoMode, handleTap, autoSpeed])
+
+  // 自动速度变化时重新设置定时器
+  useEffect(() => {
+    if (isAutoMode && autoIntervalRef.current) {
+      // 清除旧的定时器
+      clearInterval(autoIntervalRef.current)
+      // 设置新的定时器
+      const safeInterval = Math.max(autoSpeed, 800)
+      autoIntervalRef.current = setInterval(() => {
+        handleTap(false)
+      }, safeInterval)
+    }
+  }, [autoSpeed, isAutoMode, handleTap])
 
   // 音乐播放控制
   const toggleMusic = () => {
@@ -392,7 +426,8 @@ export function MuyuContainer() {
         transition={{ delay: 0.2, duration: 0.8 }}
       >
         <MuyuWood 
-          onTap={handleTap}
+          ref={muyuWoodRef}
+          onTap={handleTap} 
           isAutoMode={isAutoMode}
           tapCount={tapCount}
         />

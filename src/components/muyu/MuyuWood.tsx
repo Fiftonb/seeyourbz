@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { motion } from 'framer-motion'
 
 interface MuyuWoodProps {
-  onTap: (isManual?: boolean) => void
-  isAutoMode: boolean
-  tapCount: number
+  onTap: (isManual: boolean) => void
+  isAutoMode?: boolean
+  tapCount?: number
+}
+
+export interface MuyuWoodRef {
+  triggerAnimation: () => void
 }
 
 // 木鱼颜色选项
@@ -17,38 +21,56 @@ const muyuColors = [
   { value: 'silver', label: '银木', image: '/muyu/muyutou_sliver.png' }
 ]
 
-export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
+export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoMode, tapCount }, ref) => {
   const [isPressed, setIsPressed] = useState(false)
   const [showRipple, setShowRipple] = useState(false)
   const [selectedColor, setSelectedColor] = useState('red') // 默认使用红木
+  const animationTimeoutRef = useRef<NodeJS.Timeout[]>([])
+
+  // 暴露动画触发函数给父组件
+  useImperativeHandle(ref, () => ({
+    triggerAnimation: () => {
+      triggerAnimationInternal()
+    }
+  }), [])
+
+  // 统一的动画触发函数
+  const triggerAnimationInternal = () => {
+    // 清除之前可能存在的动画定时器
+    animationTimeoutRef.current.forEach(timer => clearTimeout(timer))
+    animationTimeoutRef.current = []
+
+    setIsPressed(true)
+    setShowRipple(true)
+    
+    const timer1 = setTimeout(() => setIsPressed(false), 150)
+    const timer2 = setTimeout(() => setShowRipple(false), 600)
+    
+    animationTimeoutRef.current = [timer1, timer2]
+  }
 
   // 点击动画效果
   const handleClick = () => {
     if (isAutoMode) return
     
-    setIsPressed(true)
-    setShowRipple(true)
+    triggerAnimationInternal()
     onTap(true) // 手动点击
-    
-    setTimeout(() => setIsPressed(false), 150)
-    setTimeout(() => setShowRipple(false), 600)
   }
 
-  // 自动模式的视觉反馈
+  // 自动模式的视觉反馈（保留作为备用）
   useEffect(() => {
-    if (isAutoMode) {
-      setIsPressed(true)
-      setShowRipple(true)
-      
-      const timer1 = setTimeout(() => setIsPressed(false), 150)
-      const timer2 = setTimeout(() => setShowRipple(false), 600)
-      
-      return () => {
-        clearTimeout(timer1)
-        clearTimeout(timer2)
-      }
+    if (isAutoMode && tapCount !== undefined) {
+      // 只在必要时才触发动画（作为备用机制）
+      triggerAnimationInternal()
     }
   }, [tapCount, isAutoMode])
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      animationTimeoutRef.current.forEach(timer => clearTimeout(timer))
+    }
+  }, [])
 
   // 获取当前选择的木鱼图片
   const currentMuyu = muyuColors.find(color => color.value === selectedColor)
@@ -217,4 +239,4 @@ export function MuyuWood({ onTap, isAutoMode, tapCount }: MuyuWoodProps) {
       )}
     </div>
   )
-} 
+}) 
