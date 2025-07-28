@@ -1,8 +1,9 @@
 {
-  "totalTaps": 2253,
-  "lastUpdated": "2025-07-28T11:33:44.195Z",
+  "totalTaps": 2640,
+  "lastUpdated": "2025-07-28T18:36:51.844Z",
   "dailyStats": {
-    "Mon Jul 28 2025": 2253
+    "Mon Jul 28 2025": 2253,
+    "Tue Jul 29 2025": 387
   },
   "description": "敲木鱼全局统计数据，记录所有用户的敲击总数和每日统计"
 }

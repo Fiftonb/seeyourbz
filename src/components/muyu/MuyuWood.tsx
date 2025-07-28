@@ -40,20 +40,15 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
     animationTimeoutRef.current.forEach(timer => clearTimeout(timer))
     animationTimeoutRef.current = []
 
-    // 立即重置状态，确保每次都能触发新的动画
-    setIsPressed(false)
-    setShowRipple(false)
+    // 简化动画逻辑，避免竞态条件
+    setIsPressed(true)
+    setShowRipple(true)
     
-    // 使用 requestAnimationFrame 确保状态重置后再触发新动画
-    requestAnimationFrame(() => {
-      setIsPressed(true)
-      setShowRipple(true)
-      
-      const timer1 = setTimeout(() => setIsPressed(false), 150)
-      const timer2 = setTimeout(() => setShowRipple(false), 600)
-      
-      animationTimeoutRef.current = [timer1, timer2]
-    })
+    // 进一步加快光圈动画，与按压动画节奏匹配
+    const timer1 = setTimeout(() => setIsPressed(false), 80)
+    const timer2 = setTimeout(() => setShowRipple(false), 250)
+    
+    animationTimeoutRef.current = [timer1, timer2]
   }
 
   // 点击动画效果
@@ -118,12 +113,12 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
         `}
         onClick={handleClick}
         animate={{
-          scale: isPressed ? 0.92 : 1,
-          y: isPressed ? 4 : 0,
+          scale: isPressed ? 0.88 : 1,
+          y: isPressed ? 6 : 0,
         }}
         transition={{
-          duration: 0.15,
-          ease: "easeOut"
+          duration: 0.08,
+          ease: "easeInOut"
         }}
         whileHover={{
           scale: isAutoMode ? 1 : 1.05,
@@ -136,7 +131,7 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
         <div className={`
           relative w-full h-full flex items-center justify-center
           ${isPressed ? 'drop-shadow-lg' : 'drop-shadow-2xl'}
-          transition-all duration-150
+          transition-all duration-75
         `}>
           <img 
             src={currentMuyu?.image} 
@@ -162,7 +157,7 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
             }}
             initial={{ scale: 0, opacity: 0.9 }}
             animate={{ scale: 15, opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           />
         )}
       </motion.div>
@@ -175,7 +170,7 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
           rotate: isPressed ? -8 : 0,
         }}
         transition={{
-          duration: 0.15,
+          duration: 0.08,
           ease: "easeOut"
         }}
       >
@@ -206,9 +201,9 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
                 scale: 0.3
               }}
               transition={{ 
-                duration: 1.2,
+                duration: 0.6,
                 ease: "easeOut",
-                delay: 0.1
+                delay: 0.05
               }}
             />
           ))}
@@ -230,9 +225,9 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
                 scale: 0.2
               }}
               transition={{ 
-                duration: 1.5,
+                duration: 0.8,
                 ease: "easeOut",
-                delay: 0.2 + Math.random() * 0.3
+                delay: 0.1 + Math.random() * 0.2
               }}
             />
           ))}

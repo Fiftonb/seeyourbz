@@ -48,6 +48,7 @@ export function MuyuContainer() {
   const [showControls, setShowControls] = useState(false)
   const [isOnline, setIsOnline] = useState(true) // 添加在线状态，默认为true
   const [pendingTaps, setPendingTaps] = useState(0) // 添加待同步状态
+  const [isMobile, setIsMobile] = useState(false) // 添加移动端检测状态
   const [muyuData, setMuyuData] = useState<MuyuData>({
     totalCount: 0,
     todayCount: 0,
@@ -58,38 +59,57 @@ export function MuyuContainer() {
   const autoIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
-  const lastTapTime = useRef<number>(0)
-  const audioPoolRef = useRef<HTMLAudioElement[]>([])
-  const currentPoolIndex = useRef<number>(0)
   const muyuWoodRef = useRef<MuyuWoodRef>(null)
+  // 音频状态管理
+  const audioUnlockedRef = useRef<boolean>(false)
+  const lastPlayTimeRef = useRef<number>(0)
   
   // 批量提交相关状态
   const pendingTapsRef = useRef<number>(0) // 待提交的敲击次数
   const isOnlineRef = useRef<boolean>(true) // 默认为true，在useEffect中更新
   const MAX_BATCH_SIZE = 50 // 最大批量大小
 
-  // 初始化网络状态（仅在客户端）
+  // 初始化网络状态和移动端检测（仅在客户端）
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const initialOnlineStatus = navigator.onLine
       setIsOnline(initialOnlineStatus)
       isOnlineRef.current = initialOnlineStatus
+      
+      // 检测移动端设备
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1)
+      setIsMobile(isMobileDevice)
     }
   }, [])
 
   // 初始化音效池
+  // useEffect(() => {
+  //   // 创建5个音效实例以避免重叠（增加容量）
+  //   const audioPool = []
+  //   for (let i = 0; i < 5; i++) {
+  //     const audio = new Audio('/audio/muyu-tap.mp3')
+  //     audio.preload = 'auto'
+  //     audio.volume = 1.0 // 敲击声音调大，比背景音乐突出
+  //     audioPool.push(audio)
+  //   }
+  //   audioPoolRef.current = audioPool
+  //   audioRef.current = audioPool[0] // 兼容原有代码
+  // }, [])
+
+  // 初始化音效（采用移动端兼容的单音频方案）
   useEffect(() => {
-    // 创建5个音效实例以避免重叠（增加容量）
-    const audioPool = []
-    for (let i = 0; i < 5; i++) {
-      const audio = new Audio('/audio/muyu-tap.mp3')
-      audio.preload = 'auto'
-      audio.volume = 1.0 // 敲击声音调大，比背景音乐突出
-      audioPool.push(audio)
+    // 根据设备类型选择音效文件
+    const audioFile = isMobile ? '/audio/muyu-tap-2.mp3' : '/audio/muyu-tap.mp3'
+    
+    if (audioRef.current) {
+      audioRef.current.src = audioFile
+      audioRef.current.preload = 'auto'
+      audioRef.current.volume = 1.0
+      
+      console.log(`音效初始化完成，使用${isMobile ? '移动端' : '桌面端'}音效: ${audioFile}`)
     }
-    audioPoolRef.current = audioPool
-    audioRef.current = audioPool[0] // 兼容原有代码
-  }, [])
+  }, [isMobile])
 
   // 初始化背景音乐音量
   useEffect(() => {
@@ -175,19 +195,37 @@ export function MuyuContainer() {
     }, 500) // 500ms 防抖
   }, [])
 
-  // 播放音效（使用音效池）
-  const playTapSound = useCallback(() => {
-    if (audioPoolRef.current.length > 0) {
-      const audio = audioPoolRef.current[currentPoolIndex.current]
-      // 重置播放位置并立即播放
-      audio.currentTime = 0
-      const playPromise = audio.play()
-      if (playPromise) {
-        playPromise.catch(console.error)
-      }
-      currentPoolIndex.current = (currentPoolIndex.current + 1) % audioPoolRef.current.length
+  // 移动端兼容的音效播放（基于最佳实践）
+  const playTapSound = useCallback(async () => {
+    if (!audioRef.current) return
+    
+    const now = Date.now()
+    const minInterval = isMobile ? 150 : 50 // 移动端需要更长间隔
+    
+    // 防止过于频繁的播放（移动端浏览器限制）
+    if (now - lastPlayTimeRef.current < minInterval) {
+      console.debug('播放间隔太短，跳过本次播放')
+      return
     }
-  }, [])
+    
+    try {
+      // 移动端首次播放需要"解锁"音频
+      if (isMobile && !audioUnlockedRef.current) {
+        await audioRef.current.play()
+        audioRef.current.pause()
+        audioUnlockedRef.current = true
+        console.debug('移动端音频已解锁')
+      }
+      
+      // 重置播放位置并播放
+      audioRef.current.currentTime = 0
+      await audioRef.current.play()
+      lastPlayTimeRef.current = now
+      
+    } catch (error) {
+      console.error('音频播放失败:', error)
+    }
+  }, [isMobile])
 
   // 监听网络状态
   useEffect(() => {
@@ -216,32 +254,17 @@ export function MuyuContainer() {
 
   // 敲击木鱼（优化音效同步）
   const handleTap = useCallback((isManual: boolean = true) => {
-    const now = Date.now()
-    
-    // 手动敲击时添加节流（最小间隔300ms）
-    if (isManual && now - lastTapTime.current < 300) {
-      return
-    }
-    
-    // 自动模式也需要最小间隔检查，防止过快敲击
-    if (!isManual && now - lastTapTime.current < 100) {
-      return
-    }
-    
-    lastTapTime.current = now
-    
-    // 立即播放音效，确保与动画同步
-    playTapSound()
-    
-    // 每次点击都直接触发动画，确保光圈效果不会被跳过
-    if (muyuWoodRef.current) {
-      muyuWoodRef.current.triggerAnimation()
-    }
+    // 移除节流限制，让敲击更加灵敏
     
     const today = new Date().toDateString()
     
     // 更新本次修行计数
     setTapCount(prev => prev + 1)
+    
+    // 立即触发动画，确保响应及时
+    if (muyuWoodRef.current) {
+      muyuWoodRef.current.triggerAnimation()
+    }
     
     // 更新数据统计（优化为批量更新）
     setMuyuData(prevData => {
@@ -264,6 +287,9 @@ export function MuyuContainer() {
 
     // 添加到批量提交队列，避免阻塞
     setTimeout(() => saveToServer(1), 0)
+    
+    // 播放敲击音效（移到最后，确保移动端兼容性）
+    playTapSound()
   }, [playTapSound, saveToServer, saveToLocalStorage])
 
 
@@ -373,9 +399,9 @@ export function MuyuContainer() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center relative px-4">
-      {/* 音频元素 */}
+      {/* 音频元素（用于兼容性，实际使用音效池） */}
       <audio ref={audioRef} preload="auto">
-        <source src="/audio/muyu-tap.mp3" type="audio/mpeg" />
+        <source src={isMobile ? "/audio/muyu-tap-2.mp3" : "/audio/muyu-tap.mp3"} type="audio/mpeg" />
       </audio>
       <audio 
         ref={bgMusicRef} 
@@ -513,6 +539,31 @@ export function MuyuContainer() {
                   </Button>
                 </div>
 
+                {/* 设备类型和音频状态显示 */}
+                <div className="bg-black/20 dark:bg-black/20 bg-amber-50/80 backdrop-blur-sm rounded-lg p-3 border border-amber-400/20 dark:border-amber-400/20 border-amber-600/30">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-blue-400 mr-2"></div>
+                        <span className="text-amber-200/90 dark:text-amber-200/90 text-amber-800">
+                          {isMobile ? '移动端' : '桌面端'}音效
+                        </span>
+                      </div>
+                      <span className="text-amber-300/70 dark:text-amber-300/70 text-amber-700 text-xs">
+                        {isMobile ? '增强版' : '标准版'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-amber-200/70 dark:text-amber-200/70 text-amber-700">
+                        音频状态
+                      </span>
+                      <span className="text-amber-300/80 dark:text-amber-300/80 text-amber-700">
+                        {audioUnlockedRef.current ? '已解锁' : '未解锁'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* 数据同步状态 */}
                 {(!isOnline || pendingTaps > 0) && (
                   <div className="bg-black/20 dark:bg-black/20 bg-amber-50/80 backdrop-blur-sm rounded-lg p-3 border border-amber-400/20 dark:border-amber-400/20 border-amber-600/30">
@@ -601,7 +652,7 @@ export function MuyuContainer() {
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: [0, 0.6, 0], scale: [0, 1.5, 2] }}
-          transition={{ duration: 2, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           key={tapCount}
         >
           <div className="text-amber-300/40 text-4xl">🪷</div>
