@@ -40,30 +40,31 @@ export const MuyuWood = forwardRef<MuyuWoodRef, MuyuWoodProps>(({ onTap, isAutoM
     animationTimeoutRef.current.forEach(timer => clearTimeout(timer))
     animationTimeoutRef.current = []
 
-    setIsPressed(true)
-    setShowRipple(true)
+    // 立即重置状态，确保每次都能触发新的动画
+    setIsPressed(false)
+    setShowRipple(false)
     
-    const timer1 = setTimeout(() => setIsPressed(false), 150)
-    const timer2 = setTimeout(() => setShowRipple(false), 600)
-    
-    animationTimeoutRef.current = [timer1, timer2]
+    // 使用 requestAnimationFrame 确保状态重置后再触发新动画
+    requestAnimationFrame(() => {
+      setIsPressed(true)
+      setShowRipple(true)
+      
+      const timer1 = setTimeout(() => setIsPressed(false), 150)
+      const timer2 = setTimeout(() => setShowRipple(false), 600)
+      
+      animationTimeoutRef.current = [timer1, timer2]
+    })
   }
 
   // 点击动画效果
   const handleClick = () => {
     if (isAutoMode) return
     
-    triggerAnimationInternal()
+    // 只调用onTap，动画由父组件统一控制
     onTap(true) // 手动点击
   }
 
-  // 自动模式的视觉反馈（保留作为备用）
-  useEffect(() => {
-    if (isAutoMode && tapCount !== undefined) {
-      // 只在必要时才触发动画（作为备用机制）
-      triggerAnimationInternal()
-    }
-  }, [tapCount, isAutoMode])
+  // 自动模式的视觉反馈现在由父组件统一控制，无需重复触发
 
   // 清理定时器
   useEffect(() => {

@@ -42,7 +42,7 @@ const autoSpeedOptions = [
 export function MuyuContainer() {
   const [tapCount, setTapCount] = useState(0)
   const [isAutoMode, setIsAutoMode] = useState(false)
-  const [autoSpeed, setAutoSpeed] = useState(1000) // 修正为1000ms，与"适中"选项一致
+  const [autoSpeed, setAutoSpeed] = useState(800) // 默认选择较快 (0.8秒)
   const [selectedMusic, setSelectedMusic] = useState('buddhist')
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showControls, setShowControls] = useState(false)
@@ -68,11 +68,18 @@ export function MuyuContainer() {
     for (let i = 0; i < 5; i++) {
       const audio = new Audio('/audio/muyu-tap.mp3')
       audio.preload = 'auto'
-      audio.volume = 0.8 // 设置适中的音量
+      audio.volume = 1.0 // 敲击声音调大，比背景音乐突出
       audioPool.push(audio)
     }
     audioPoolRef.current = audioPool
     audioRef.current = audioPool[0] // 兼容原有代码
+  }, [])
+
+  // 初始化背景音乐音量
+  useEffect(() => {
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = 0.8 // 背景音乐音量调低，让敲击声更突出
+    }
   }, [])
 
   // 加载本地数据
@@ -142,8 +149,8 @@ export function MuyuContainer() {
     // 立即播放音效，确保与动画同步
     playTapSound()
     
-    // 直接触发动画，避免React渲染延迟
-    if (!isManual && muyuWoodRef.current) {
+    // 每次点击都直接触发动画，确保光圈效果不会被跳过
+    if (muyuWoodRef.current) {
       muyuWoodRef.current.triggerAnimation()
     }
     
@@ -232,6 +239,7 @@ export function MuyuContainer() {
     if (bgMusicRef.current) {
       bgMusicRef.current.pause()
       bgMusicRef.current.src = `/audio/muyu-bg-${value}.mp3`
+      bgMusicRef.current.volume = 0.8 // 背景音乐音量调低，让敲击声更突出
     }
   }
 
