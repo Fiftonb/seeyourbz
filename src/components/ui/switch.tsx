@@ -164,7 +164,7 @@ export const Switch = forwardRef(function Switch(
       className={clsx(
         className,
         // Base styles
-        'group relative isolate inline-flex h-6 w-10 cursor-default rounded-full p-[3px] sm:h-5 sm:w-8',
+        'group relative isolate inline-flex h-6 w-11 cursor-default rounded-full p-[3px] sm:h-5 sm:w-8',
         // Transitions
         'transition duration-300 ease-in-out',
         // Outline and background color in forced-colors mode so switch is still visible
@@ -196,7 +196,7 @@ export const Switch = forwardRef(function Switch(
           'bg-white shadow-sm ring-1 ring-black/5',
           // Checked
           colorClasses.thumb,
-          'group-data-[checked]:translate-x-4 sm:group-data-[checked]:translate-x-3',
+          'group-data-[checked]:translate-x-3 sm:group-data-[checked]:translate-x-3',
           // Disabled
           'group-data-[checked]:group-data-[disabled]:bg-white group-data-[checked]:group-data-[disabled]:shadow-sm group-data-[checked]:group-data-[disabled]:ring-black/5'
         )}
