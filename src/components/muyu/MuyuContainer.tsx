@@ -46,7 +46,7 @@ export function MuyuContainer() {
   const [selectedMusic, setSelectedMusic] = useState('buddhist')
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showControls, setShowControls] = useState(false)
-  const [isOnline, setIsOnline] = useState(navigator.onLine) // 添加在线状态
+  const [isOnline, setIsOnline] = useState(true) // 添加在线状态，默认为true
   const [pendingTaps, setPendingTaps] = useState(0) // 添加待同步状态
   const [muyuData, setMuyuData] = useState<MuyuData>({
     totalCount: 0,
@@ -65,8 +65,17 @@ export function MuyuContainer() {
   
   // 批量提交相关状态
   const pendingTapsRef = useRef<number>(0) // 待提交的敲击次数
-  const isOnlineRef = useRef<boolean>(navigator.onLine)
+  const isOnlineRef = useRef<boolean>(true) // 默认为true，在useEffect中更新
   const MAX_BATCH_SIZE = 50 // 最大批量大小
+
+  // 初始化网络状态（仅在客户端）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const initialOnlineStatus = navigator.onLine
+      setIsOnline(initialOnlineStatus)
+      isOnlineRef.current = initialOnlineStatus
+    }
+  }, [])
 
   // 初始化音效池
   useEffect(() => {
