@@ -37,11 +37,12 @@ export function TodayInfo({ date = new Date() }: TodayInfoProps) {
   
   // 构建冲煞建议文本
   const buildClashAdvice = () => {
-    const clashAnimal = almanacInfo.clash.replace('冲', '').replace(/[()]/g, '')
+    const clashInfo = almanacInfo.clash.replace('冲', '')
+    const clashAnimal = clashInfo.split('(')[0] // 只取生肖名，不要地支
     const evilDirection = almanacInfo.evil.replace('煞', '')
     
     const advice = []
-    advice.push(`今日与${clashAnimal}相冲，属${clashAnimal}的朋友今天宜静不宜动`)
+    advice.push(`今日与${clashInfo}相冲，属${clashAnimal}的朋友今天宜静不宜动`)
     advice.push(`${evilDirection}方向不太吉利，重要事情尽量避开朝${evilDirection}方向进行`)
     
     // 值神建议
@@ -126,17 +127,15 @@ export function TodayInfo({ date = new Date() }: TodayInfoProps) {
         {/* 宜忌建议 */}
         {tabooAdvice && (
           <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4 border border-green-200 dark:border-green-800">
-            <div className="flex items-start justify-between gap-4">
-              <Text className="text-sm text-green-800 dark:text-green-200 leading-relaxed flex-1">
-                📅 {tabooAdvice}
-              </Text>
+            <Text className="text-sm text-green-800 dark:text-green-200 leading-relaxed">
+              📅 {tabooAdvice}　
               <Link 
                 href="/almanac"
-                className="text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors"
+                className="text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors ml-2"
               >
                 完整黄历
               </Link>
-            </div>
+            </Text>
           </div>
         )}
         
