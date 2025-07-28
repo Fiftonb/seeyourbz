@@ -115,11 +115,11 @@ export function MuyuContainer() {
       // 保存到本地存储（不保存sessionCount）
       localStorage.setItem('muyu-data', JSON.stringify(newData))
 
-              // 保存到服务器JSON文件（传递增量+1）
-        saveToServer(1)
-
       return newData
     })
+
+    // 保存到服务器JSON文件（传递增量+1）
+    saveToServer(1)
 
     // 播放敲击音效
     if (audioRef.current) {
