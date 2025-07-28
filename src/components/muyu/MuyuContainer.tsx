@@ -27,10 +27,10 @@ interface MuyuData {
 }
 
 const bgMusicOptions = [
-  { value: 'buddhist', label: '佛教音乐' },
-  { value: 'temple', label: '寺庙钟声' },
-  { value: 'nature', label: '自然水声' },
-  { value: 'meditation', label: '冥想音乐' }
+  { value: 'buddhist', label: '大悲咒' },
+  { value: 'temple', label: '云水禅心' },
+  { value: 'nature', label: '水清月现' },
+  { value: 'meditation', label: '六字大明咒' }
 ]
 
 const autoSpeedOptions = [
