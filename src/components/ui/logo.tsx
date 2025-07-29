@@ -38,7 +38,7 @@ export function Logo({ className }: LogoProps) {
         <path d="M50 85 L48 75 L50 65 L52 75 Z" fill="currentColor"/>
         <path d="M15 50 L25 48 L35 50 L25 52 Z" fill="currentColor"/>
       </svg>
-      <span className="text-lg font-bold">今夕何时</span>
+      <span className="text-lg font-bold text-zinc-950 dark:text-white">今夕何时</span>
     </div>
   )
 } 

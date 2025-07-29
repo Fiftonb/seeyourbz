@@ -35,19 +35,19 @@ export default function ShengjiaoPage() {
             <div className="space-y-2 text-sm">
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">1</span>
-                <span>输入您要请示神明的问题</span>
+                <span className="text-gray-700 dark:text-gray-300">输入您要请示神明的问题</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">2</span>
-                <span>点击"掷筊"按钮</span>
+                <span className="text-gray-700 dark:text-gray-300">点击"掷筊"按钮</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">3</span>
-                <span>查看结果并解读神明指示</span>
+                <span className="text-gray-700 dark:text-gray-300">查看结果并解读神明指示</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">4</span>
-                <span>如需再次请示，可重新掷筊</span>
+                <span className="text-gray-700 dark:text-gray-300">如需再次请示，可重新掷筊</span>
               </p>
             </div>
           </CardContent>
@@ -81,19 +81,19 @@ export default function ShengjiaoPage() {
             <div className="space-y-2 text-sm">
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>掷筊时保持虔诚心态，专注于所求之事</span>
+                <span className="text-gray-700 dark:text-gray-300">掷筊时保持虔诚心态，专注于所求之事</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>问题应明确具体，避免模糊不清</span>
+                <span className="text-gray-700 dark:text-gray-300">问题应明确具体，避免模糊不清</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>结果仅供参考，重大决策需综合考虑</span>
+                <span className="text-gray-700 dark:text-gray-300">结果仅供参考，重大决策需综合考虑</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>尊重神明，不可频繁重复相同问题</span>
+                <span className="text-gray-700 dark:text-gray-300">尊重神明，不可频繁重复相同问题</span>
               </p>
             </div>
           </CardContent>

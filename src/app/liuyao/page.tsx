@@ -35,19 +35,19 @@ export default function LiuyaoPage() {
             <div className="space-y-2 text-sm">
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">1</span>
-                <span>心中默念要占卜的问题</span>
+                <span className="text-gray-700 dark:text-gray-300">心中默念要占卜的问题</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">2</span>
-                <span>连续点击6次"投掷铜钱"</span>
+                <span className="text-gray-700 dark:text-gray-300">连续点击6次"投掷铜钱"</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">3</span>
-                <span>点击"解卦"查看结果</span>
+                <span className="text-gray-700 dark:text-gray-300">点击"解卦"查看结果</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">4</span>
-                <span>根据卦象解读指引做决策</span>
+                <span className="text-gray-700 dark:text-gray-300">根据卦象解读指引做决策</span>
               </p>
             </div>
           </CardContent>
@@ -81,19 +81,19 @@ export default function LiuyaoPage() {
             <div className="space-y-2 text-sm">
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>保持内心虔诚，专注于要占卜的问题</span>
+                <span className="text-gray-700 dark:text-gray-300">保持内心虔诚，专注于要占卜的问题</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>同一问题不宜重复占卜</span>
+                <span className="text-gray-700 dark:text-gray-300">同一问题不宜重复占卜</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>结果仅供参考，关键在于自身努力</span>
+                <span className="text-gray-700 dark:text-gray-300">结果仅供参考，关键在于自身努力</span>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-amber-500 mt-1">⚠️</span>
-                <span>遵循"五不测"原则，理性对待</span>
+                <span className="text-gray-700 dark:text-gray-300">遵循"五不测"原则，理性对待</span>
               </p>
             </div>
           </CardContent>
