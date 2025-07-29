@@ -473,6 +473,7 @@ export function MuyuContainer() {
                     <Switch
                       checked={isAutoMode}
                       onChange={toggleAutoMode}
+                      className="muyu-switch"
                     />
                     <span className="text-amber-200/80 dark:text-amber-200/80 text-amber-900 text-sm font-medium">自动</span>
                   </div>

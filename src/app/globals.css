@@ -442,4 +442,33 @@ div[dangerouslySetInnerHTML] font[color="#0000FF"],
   :root:not([data-theme="light"]) .text-gray-700 font[color="#0000FF"] {
     color: #60a5fa !important;
   }
+}
+
+/* ============================================================================
+   木鱼页面Switch组件修复
+   ============================================================================ */
+
+/* 修复木鱼页面Switch组件白点移动距离 - 使用正确的选择器 */
+.muyu-switch[data-checked] span[aria-hidden="true"] {
+  transform: translateX(20px) !important; /* 移动端: 20px移动距离 */
+}
+
+@media (min-width: 640px) {
+  .muyu-switch[data-checked] span[aria-hidden="true"] {
+    transform: translateX(12px) !important; /* 桌面端: 12px移动距离 */
+  }
+}
+
+/* 针对group状态的更强选择器 */
+button.muyu-switch.group[data-checked] > span[aria-hidden="true"],
+button.muyu-switch[data-checked] > span[aria-hidden="true"] {
+  transform: translateX(20px) !important;
+  transition: transform 300ms ease-in-out;
+}
+
+@media (min-width: 640px) {
+  button.muyu-switch.group[data-checked] > span[aria-hidden="true"],
+  button.muyu-switch[data-checked] > span[aria-hidden="true"] {
+    transform: translateX(12px) !important;
+  }
 } 
