@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { SolarDay } from 'tyme4ts'
 import { Text } from '@/components/ui/text'
 import { Badge } from '@/components/ui/badge'
@@ -8,10 +11,34 @@ interface TodayInfoProps {
   date?: Date
 }
 
-export function TodayInfo({ date = new Date() }: TodayInfoProps) {
-  const today = SolarDay.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+export function TodayInfo({ date }: TodayInfoProps) {
+  const [currentDate, setCurrentDate] = useState<Date>(date || new Date())
+  const [isClient, setIsClient] = useState(false)
+
+  // 确保在客户端渲染时使用正确的本地时间
+  useEffect(() => {
+    setIsClient(true)
+    if (!date) {
+      setCurrentDate(new Date())
+    }
+  }, [date])
+
+  // 在服务器端渲染时显示加载状态，避免时区不一致
+  if (!isClient) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
+        <div className="space-y-4 animate-pulse">
+          <div className="text-center">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const today = SolarDay.fromYmd(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate())
   const lunarDay = today.getLunarDay()
-  const almanacInfo = getAlmanacInfo(date)
+  const almanacInfo = getAlmanacInfo(currentDate)
   const term = today.getTerm()
   
   // 构建今日描述文本
