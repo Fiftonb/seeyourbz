@@ -189,7 +189,7 @@ export function AppLayout({
       sidebar={
         <Sidebar>
           <SidebarHeader>
-            <div className="flex items-center gap-3 px-2 py-2.5">
+            <div className="flex items-center gap-3 px-2 py-2.5 text-zinc-950 dark:text-white">
               <LogoIcon className="!size-6" />
               <SidebarLabel>今夕何时</SidebarLabel>
             </div>
