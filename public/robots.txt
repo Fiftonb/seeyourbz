@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://今夕何时.com/sitemap.xml
+
+# Disallow sensitive or non-index pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /settings
+Disallow: /browser-redirect
+Disallow: /browser-test
+
+

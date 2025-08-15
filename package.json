@@ -19,7 +19,9 @@
     "db:backup:clean": "find prisma/backups -name '*.db' -mtime +30 -delete 2>/dev/null || true && find prisma/backups -name '*.sql' -mtime +30 -delete 2>/dev/null || true",
     "db:backup:linux": "./scripts/backup-db-linux.sh",
     "db:backup:macos": "./scripts/backup-db.sh",
-    "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "seo:push-baidu": "tsx src/lib/baidu-push.ts",
+    "seo:push-baidu:sitemap": "BAIDU_SITE=xn--wmq0mr3w3mn.com BAIDU_TOKEN=3CpNJ2ZUWPa2O7p2 tsx src/lib/baidu-push.ts --sitemap https://今夕何时.com/sitemap.xml"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
