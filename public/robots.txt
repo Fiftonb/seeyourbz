@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://今夕何时.com/sitemap.xml
+Sitemap: https://xn--wmq0mr3w3mn.com/sitemap.xml
 
 # Disallow sensitive or non-index pages
 Disallow: /admin/
