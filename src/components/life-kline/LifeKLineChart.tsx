@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import {
   ComposedChart,
   Bar,
+  Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,10 +22,15 @@ interface LifeKLineChartProps {
 }
 
 // 自定义Tooltip组件
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, colorTheme }: any) => {
+  const tooltipColors = getColors(colorTheme || 'greenUp')
   if (active && payload && payload.length) {
     const data = payload[0].payload as KLinePoint
     const isUp = data.close >= data.open
+    const upBgClass = colorTheme === 'redUp' ? 'bg-red-100 dark:bg-red-900/50' : 'bg-green-100 dark:bg-green-900/50'
+    const upTextClass = colorTheme === 'redUp' ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'
+    const downBgClass = colorTheme === 'redUp' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'
+    const downTextClass = colorTheme === 'redUp' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
     return (
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-5 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 w-[320px] md:w-[400px]">
         {/* Header */}
@@ -36,7 +43,7 @@ const CustomTooltip = ({ active, payload }: any) => {
               大运：{data.daYun || '未知'}
             </p>
           </div>
-          <div className={`text-base font-bold px-2 py-1 rounded ${isUp ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400'}`}>
+          <div className={`text-base font-bold px-2 py-1 rounded ${isUp ? `${upBgClass} ${upTextClass}` : `${downBgClass} ${downTextClass}`}`}>
             {isUp ? '吉 ▲' : '凶 ▼'}
           </div>
         </div>
@@ -73,11 +80,11 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // K线蜡烛形状组件
 const CandleShape = (props: any) => {
-  const { x, y, width, height, payload } = props
+  const { x, y, width, height, payload, colors } = props
 
   const isUp = payload.close >= payload.open
-  // Colors matching the current legend (Green=Rise, Red=Fall)
-  const color = isUp ? '#10b981' : '#ef4444'
+  // 根据颜色主题选择颜色
+  const color = isUp ? (colors?.upColor || '#10b981') : (colors?.downColor || '#ef4444')
 
   // 计算实体的上下边界值
   const bodyMax = Math.max(payload.open, payload.close)
@@ -160,12 +167,67 @@ const DaYunAxisTick = (props: any) => {
   );
 };
 
+// 颜色主题类型
+type ColorTheme = 'greenUp' | 'redUp'
+
+// 视图模式类型
+type ViewMode = 'kline' | 'curve' | 'both'
+
+// 获取颜色配置
+const getColors = (theme: ColorTheme) => {
+  if (theme === 'redUp') {
+    // 红涨绿跌（中国股市风格）
+    return { upColor: '#ef4444', downColor: '#10b981' }
+  }
+  // 绿涨红跌（默认）
+  return { upColor: '#10b981', downColor: '#ef4444' }
+}
+
 export default function LifeKLineChart({ data }: LifeKLineChartProps) {
   const [selectedPoint, setSelectedPoint] = useState<KLinePoint | null>(null)
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
+    // 从 localStorage 读取保存的主题
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('kline-color-theme') as ColorTheme) || 'greenUp'
+    }
+    return 'greenUp'
+  })
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // 从 localStorage 读取保存的视图模式
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('kline-view-mode') as ViewMode) || 'kline'
+    }
+    return 'kline'
+  })
+
+  // 切换颜色主题
+  const toggleColorTheme = () => {
+    const newTheme = colorTheme === 'greenUp' ? 'redUp' : 'greenUp'
+    setColorTheme(newTheme)
+    localStorage.setItem('kline-color-theme', newTheme)
+  }
+
+  // 切换视图模式
+  const cycleViewMode = () => {
+    const modes: ViewMode[] = ['kline', 'curve', 'both']
+    const currentIndex = modes.indexOf(viewMode)
+    const nextMode = modes[(currentIndex + 1) % modes.length]
+    setViewMode(nextMode)
+    localStorage.setItem('kline-view-mode', nextMode)
+  }
+
+  const viewModeLabels = {
+    kline: 'K线',
+    curve: '曲线',
+    both: '叠加'
+  }
+
+  const colors = getColors(colorTheme)
 
   const transformedData = data.map(d => ({
     ...d,
     bodyRange: [Math.min(d.open, d.close), Math.max(d.open, d.close)],
+    midValue: (d.open + d.close) / 2, // 中间值用于曲线
   }))
 
   // 动态计算 Y 轴范围，让数据更紧凑
@@ -223,13 +285,46 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">
           人生流年大运K线图
         </h3>
-        <div className="flex gap-4 text-xs font-medium">
-          <span className="flex items-center text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-            <div className="w-2 h-2 bg-green-500 mr-2 rounded-full"></div> 吉运 (涨)
-          </span>
-          <span className="flex items-center text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">
-            <div className="w-2 h-2 bg-red-500 mr-2 rounded-full"></div> 凶运 (跌)
-          </span>
+        <div className="flex items-center gap-4">
+          {/* 颜色图例 */}
+          <div className="flex gap-3 text-xs font-medium">
+            <span className={`flex items-center px-2 py-1 rounded ${
+              colorTheme === 'redUp' 
+                ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30' 
+                : 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30'
+            }`}>
+              <div className={`w-2 h-2 mr-2 rounded-full ${colorTheme === 'redUp' ? 'bg-red-500' : 'bg-green-500'}`}></div> 吉运 (涨)
+            </span>
+            <span className={`flex items-center px-2 py-1 rounded ${
+              colorTheme === 'redUp' 
+                ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30' 
+                : 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30'
+            }`}>
+              <div className={`w-2 h-2 mr-2 rounded-full ${colorTheme === 'redUp' ? 'bg-green-500' : 'bg-red-500'}`}></div> 凶运 (跌)
+            </span>
+          </div>
+          {/* 颜色切换按钮 */}
+          <button
+            onClick={toggleColorTheme}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors border border-gray-300 dark:border-gray-600"
+            title="切换K线颜色风格"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+            {colorTheme === 'greenUp' ? '绿涨红跌' : '红涨绿跌'}
+          </button>
+          {/* 视图模式切换按钮 */}
+          <button
+            onClick={cycleViewMode}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 rounded-lg transition-colors border border-indigo-300 dark:border-indigo-600"
+            title="切换视图模式：K线 / 曲线 / 叠加"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            </svg>
+            {viewModeLabels[viewMode]}
+          </button>
         </div>
       </div>
 
@@ -274,18 +369,51 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
             />
 
             <Tooltip
-              content={<CustomTooltip />}
+              content={<CustomTooltip colorTheme={colorTheme} />}
               cursor={{ stroke: '#4b5563', strokeWidth: 1, strokeDasharray: '3 3' }}
             />
 
-            <Bar
-              dataKey="bodyRange"
-              shape={<CandleShape />}
-              isAnimationActive={true}
-              animationDuration={1500}
-              onClick={handleBarClick}
-              xAxisId={0} // Default axis
-            />
+            {/* 运势曲线 - 带渐变填充 */}
+            {(viewMode === 'curve' || viewMode === 'both') && (
+              <>
+                <defs>
+                  <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="midValue"
+                  stroke="transparent"
+                  fill="url(#curveGradient)"
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="midValue"
+                  stroke="#a78bfa"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }}
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                />
+              </>
+            )}
+
+            {/* K线 */}
+            {(viewMode === 'kline' || viewMode === 'both') && (
+              <Bar
+                dataKey="bodyRange"
+                shape={<CandleShape colors={colors} />}
+                isAnimationActive={true}
+                animationDuration={1500}
+                onClick={handleBarClick}
+                xAxisId={0}
+              />
+            )}
 
           </ComposedChart>
         </ResponsiveContainer>
@@ -391,6 +519,11 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
               {data.map((point, index) => {
                 const isUp = point.close >= point.open
                 const isSelected = point.age === selectedPoint?.age
+                // 根据颜色主题设置样式
+                const upBgClass = colorTheme === 'redUp' ? 'bg-red-100 dark:bg-red-900/50' : 'bg-green-100 dark:bg-green-900/50'
+                const upTextClass = colorTheme === 'redUp' ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'
+                const downBgClass = colorTheme === 'redUp' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'
+                const downTextClass = colorTheme === 'redUp' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
                 return (
                   <tr
                     key={index}
@@ -405,8 +538,8 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
                     <td className="px-4 py-2 text-indigo-600 dark:text-indigo-400">{point.daYun}</td>
                     <td className="px-4 py-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isUp
-                        ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
-                        : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400'
+                        ? `${upBgClass} ${upTextClass}`
+                        : `${downBgClass} ${downTextClass}`
                         }`}>
                         {isUp ? '吉 ▲' : '凶 ▼'} {point.score}分
                       </span>
