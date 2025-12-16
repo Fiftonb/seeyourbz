@@ -24,8 +24,8 @@ export default function LifeKLinePage() {
   const [useBuiltinApi, setUseBuiltinApi] = useState<boolean>(true) // 默认使用内置API
   const [builtinPassword, setBuiltinPassword] = useState<string>('')
   const [apiKey, setApiKey] = useState<string>('')
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://api.openai.com/v1')
-  const [modelName, setModelName] = useState<string>('gpt-4o')
+  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://myai.naiai.net/v1')
+  const [modelName, setModelName] = useState<string>('gemini-2.5-flash-lite')
 
   // 结果状态
   const [result, setResult] = useState<LifeKLineResult | null>(null)
@@ -516,7 +516,7 @@ export default function LifeKLinePage() {
                     <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800 mb-4">
                       <Text className="text-sm text-amber-700 dark:text-amber-300">
                         <strong>提示：</strong>本功能需要使用AI大模型进行命理分析。请填写兼容OpenAI格式的API配置。
-                        推荐使用 GPT-4o、Gemini 2.5 Pro 或 Claude 3.5 Sonnet 等模型。
+                        推荐使用 gemini-2.5-flash-lite、Gemini 2.5 Pro 或 Claude 3.5 Sonnet 等模型。
                       </Text>
                     </div>
 
@@ -529,7 +529,7 @@ export default function LifeKLinePage() {
                           type="text"
                           value={modelName}
                           onChange={(e) => setModelName(e.target.value)}
-                          placeholder="gpt-4o"
+                          placeholder="gemini-2.5-flash-lite"
                           className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                         />
                       </div>
@@ -542,7 +542,7 @@ export default function LifeKLinePage() {
                           type="text"
                           value={apiBaseUrl}
                           onChange={(e) => setApiBaseUrl(e.target.value)}
-                          placeholder="https://api.openai.com/v1"
+                          placeholder="https://myai.naiai.net/v1"
                           className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                         />
                       </div>

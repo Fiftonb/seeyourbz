@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
       finalApiKey = apiKey
       finalApiBaseUrl = apiBaseUrl
-      finalModelName = modelName && modelName.trim() ? modelName.trim() : 'gpt-4o'
+      finalModelName = modelName && modelName.trim() ? modelName.trim() : 'gemini-2.5-flash-lite'
     }
 
     // 清理URL
@@ -149,188 +149,49 @@ export async function POST(request: NextRequest) {
 流年按六十甲子顺序推进：${SIXTY_CYCLE.slice(0, 10).join('、')}...（循环）
 **重要**: 请严格按照六十甲子顺序生成1-100岁的流年干支，不要自己推算！`
 
-    // 构建用户提示词
+    // 构建用户提示词（优化精简版）
     const userPrompt = `
-      请分析以下八字命盘，并生成 100 岁的人生 K 线图数据。
+请分析八字命盘，生成100岁人生K线图数据。
 
-      【基本信息】
-      性别：${genderStr}
-      姓名：${name || "未提供"}
-      出生年份：${birthYear}年
-      
-      【八字四柱】
-      年柱：${yearPillar}
-      月柱：${monthPillar}
-      日柱：${dayPillar}
-      时柱：${hourPillar}
-      
-      ${timelineContext}
-      
-      【生成任务】
-      1. 分析命局五行喜忌、格局层次
-      2. 针对 1-100 岁每一年，根据流年干支、大运的吉凶（参考刑冲合害、神煞等），给出 0-100 的运势评分
-      3. 严格按照 JSON Schema 生成数据，包含 analysis 和 chartPoints 两个顶级字段
-      4. chartPoints 必须包含完整的100个年份数据点
-      
-      【⚠️ 关键要求 - 数值必须有变化】
-      
-      **1. 年度间的差异（不同年份之间）：**
-      - 严禁所有年份使用相同的数值！比如不能所有年份都是75分
-      - 每一年的综合score都必须根据该年的流年干支和大运单独计算
-      - 参考评分标准：
-        * 极佳年份（三合、六合、天乙贵人等）：75-95分
-        * 平顺年份（无明显吉凶）：50-70分
-        * 波折年份（冲、刑、害等）：20-45分
-      - 不同大运阶段应该有明显的整体趋势差异
-      
-      **2. 年度内的波动（同一年内的open/close/high/low）：⚠️ 这个最重要！**
-      - **open（年初运势）**：代表该年1-3月的运势
-      - **close（年尾运势）**：代表该年10-12月的运势
-      - **high（年内最高点）**：该年运势最好的月份，必须 ≥ max(open, close)
-      - **low（年内最低点）**：该年运势最差的月份，必须 ≤ min(open, close)
-      - **score（综合评分）**：整年的平均运势水平，通常在open和close之间
-      
-      ⚠️ **禁止将同一年的 open、close、high、low 都设置成相同的值！**
-      例如：禁止出现 "open": 75, "close": 75, "high": 75, "low": 75
-      
-      **正确示例：**
-      {
-        "age": 25,
-        "score": 72,
-        "open": 68,     // 年初运势一般
-        "close": 78,    // 年尾运势转好（阳线，年运上扬）
-        "high": 85,     // 年中有高峰期
-        "low": 62,      // 年初有低谷
-        "reason": "流年干支与日主相生，虽年初略有波折，但整体运势逐步攀升..."
-      }
-      
-      - K线的 open/close 要体现年内运势变化（年初和年尾通常不同）
-      - high/low 要体现该年的峰谷差异
-      - close > open 为阳线（年运渐好），close < open 为阴线（年运走弱）
-      
-      **3. 阴阳线混合（100年中必须有起有落）：**
-      ⚠️ **禁止所有年份都是阳线（绿色）或都是阴线（红色）！**
-      - 人生有起有落，100年中必须同时包含阳线和阴线
-      - 根据命理分析合理分配：
-        * 吉运年份：close > open（阳线，绿色）
-        * 凶运年份：close < open（阴线，红色）
-        * 平运年份：close ≈ open（小阳线或小阴线）
-      - 参考比例：阳线约占50-70%，阴线约占30-50%
-      - 大运交替、刑冲克害年份应该多出现阴线
-      - 三合六合、喜神得力年份应该多出现阳线
-      
-      **错误示例（禁止）：**
-      ❌ 所有100年都是 close > open（全是绿色K线）
-      ❌ 所有100年都是 close < open（全是红色K线）
-      
-      **正确示例（必须这样）：**
-      ✅ 混合示例：
-      - 第1年：open=52, close=58（阳线，年运上扬）
-      - 第2年：open=58, close=55（阴线，略有回落）
-      - 第3年：open=55, close=62（阳线，转好）
-      - 第4年：open=62, close=48（阴线，遇冲克，运势下滑）
-      - 第5年：open=48, close=52（小阳线，逐步恢复）
-      
-      **4. K线形态多样性（最重要！避免单调）：**
-      ⚠️ **必须生成不同形态的K线，不能所有K线看起来都一样！**
-      
-      真实的K线图有丰富的形态变化，你必须模拟这种多样性：
-      
-      **实体大小变化：**
-      - **大阳线**（吉运强势）：close - open ≥ 15分，例如 open=50, close=70
-      - **小阳线**（微涨）：close - open ≤ 5分，例如 open=55, close=58
-      - **大阴线**（凶运明显）：open - close ≥ 15分，例如 open=75, close=55
-      - **小阴线**（微跌）：open - close ≤ 5分，例如 open=60, close=57
-      - **十字星**（转折点）：open ≈ close（差距≤2分），但high和low要有明显区间
-      
-      
-      **影线长度变化：** ⚠️ 影线必须明显可见！
-      - **长上影线**（上方受阻，至少占30%）：high 比 max(open,close) 高出**15-25分**
-        例如：open=60, close=65, high=85, low=58（年中大幅冲高后回落）
-      - **长下影线**（下方支撑，至少占30%）：low 比 min(open,close) 低出**15-25分**  
-        例如：open=55, close=60, high=62, low=35（年初探底后强力反弹）
-      - **双长影线**（震荡剧烈，占10-15%）：上下影线都很长
-        例如：open=60, close=62, high=85, low=40（全年大起大落）
-      - **短影线**（平稳期，占30-40%）：high/low 与实体差距3-8分
-      - **无影线**（极强势/弱势，占5-10%）：high=max(open,close)，low=min(open,close)
-      
-      **重要：影线必须足够长，才能在图表上看到！**
-      禁止所有K线的影线都很短，至少50%以上的K线要有明显的上影线或下影线（长度≥10分）
-      
-      
-      **形态组合示例：**
-      年龄25: 开盘50, 收盘68, 最高75, 最低48   (大阳线，长上影)
-      年龄26: 开盘68, 收盘72, 最高78, 最低65   (小阳线)
-      年龄27: 开盘72, 收盘52, 最高72, 最低45   (大阴线，长下影)
-      年龄28: 开盘52, 收盘50, 最高68, 最低42   (十字星，上下影都长)
-      年龄29: 开盘50, 收盘65, 最高65, 最低50   (大阳线，无影线，强势)
-      
-      
-      参考比例（100年中）：
-      - 大阳线/大阴线：各占15-20%
-      - 中等实体：占40-50%
-      - 小实体/十字星：占20-30%
-      - 长影线K线：占30-40%
-      
-      【重要：JSON格式要求】
-      返回的JSON必须完全遵循以下格式（字段名不得更改）：
-      {
-        "analysis": {
-          "summary": "命理总评文字",
-          "summaryScore": 数字0-10,
-          "industry": "事业分析文字",
-          "industryScore": 数字0-10,
-          "wealth": "财运分析文字",
-          "wealthScore": 数字0-10,
-          "marriage": "婚姻分析文字",
-          "marriageScore": 数字0-10,
-          "health": "健康分析文字",
-          "healthScore": 数字0-10,
-          "family": "六亲分析文字",
-          "familyScore": 数字0-10
-        },
-        "chartPoints": [
-          {
-            "age": 1,
-            "year": 数字,
-            "ganZhi": "干支字符串",
-            "daYun": "大运字符串",
-            "score": 55,
-            "open": 52,     // ⚠️ 年初运势，不能和close相同！
-            "close": 58,    // ⚠️ 年尾运势，不能和open相同！
-            "high": 65,     // ⚠️ 年内最高，必须 ≥ max(52, 58)
-            "low": 48,      // ⚠️ 年内最低，必须 ≤ min(52, 58)
-            "reason": "详批文字30字左右"
-          },
-          {
-            "age": 2,
-            "year": 数字,
-            "ganZhi": "干支字符串",
-            "daYun": "大运字符串",
-            "score": 68,
-            "open": 58,     // 上一年的close
-            "close": 72,    // ✅ 阳线：年运上扬（close > open）
-            "high": 78,
-            "low": 55,
-            "reason": "详批文字30字左右"
-          },
-          {
-            "age": 3,
-            "year": 数字,
-            "ganZhi": "干支字符串",
-            "daYun": "大运字符串",
-            "score": 58,
-            "open": 72,     // 上一年的close
-            "close": 55,    // ✅ 阴线：遇冲克，年运下滑（close < open）
-            "high": 72,
-            "low": 50,
-            "reason": "详批文字30字左右"
-          }
-          // ... 继续生成到100岁，必须包含阴阳线混合（约50-70%阳线，30-50%阴线）
-        ]
-      }
-      
-      请直接返回JSON，不要包含其他解释。`
+【命盘信息】
+性别：${genderStr} | 出生：${birthYear}年
+四柱：${yearPillar} ${monthPillar} ${dayPillar} ${hourPillar}
+
+${timelineContext}
+
+【核心规则】
+1. **评分标准（必须严格遵守！）**：
+   - 吉年: 70-96分，平年: 45-70分，凶年: 25-45分
+   - **严禁超过99分或低于20分！** 即使大吉最高也只能85-88，大凶最低也只能22-28
+   - 70-100岁老年阶段：整体运势应该下降，范围在 30-65分
+   - 全生100年的平均分应在 50-60 之间
+2. **K线连续性（最重要！）**：
+   - 当前年的open必须等于上一年的close（保证K线连续无跳空）
+   - 例如：第1年close=58，则第2年open必须=58
+3. **K线规则**：
+   - open≠close（吉年close>open，凶年close<open）
+   - high≥max(open,close)+3，low≤min(open,close)-3（影线要明显）
+   - 如果上一年close已经较高(如>80)，本年应该主动下调避免累积过高
+4. **多样性**：阳线占50-60%，阴线占40-50%，形态多变
+
+【JSON格式】
+{
+  "analysis": {
+    "summary": "命理总评", "summaryScore": 8,
+    "industry": "事业分析", "industryScore": 7,
+    "wealth": "财运分析", "wealthScore": 8,
+    "marriage": "婚姻分析", "marriageScore": 6,
+    "health": "健康分析", "healthScore": 6,
+    "family": "六亲分析", "familyScore": 6
+  },
+  "chartPoints": [
+    {"age":1,"year":${birthYear},"ganZhi":"${yearPillar}","daYun":"童限","score":55,"open":52,"close":58,"high":63,"low":48,"reason":"命理详批"},
+    {"age":2,"year":${birthYear + 1},"ganZhi":"...","daYun":"...","score":48,"open":58,"close":45,"high":60,"low":40,"reason":"阴线示例"},
+    // ...共100个数据点
+  ]
+}
+
+直接返回JSON。`
 
     // 使用流式响应
     const encoder = new TextEncoder()
@@ -355,7 +216,7 @@ export async function POST(request: NextRequest) {
                 { role: 'user', content: userPrompt }
               ],
               response_format: { type: 'json_object' },
-              temperature: 0.9,
+              temperature: 0.7,
               stream: true
             })
           })
@@ -430,7 +291,7 @@ export async function POST(request: NextRequest) {
           } catch (parseError) {
             console.error('JSON Parse Error:', parseError)
             console.error('Raw content:', fullContent.substring(0, 500))
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'AI 返回的数据格式不正确，无法解析' })}\n\n`))
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'AI 返回的数据格式不正确，请重新生成' })}\n\n`))
             controller.close()
             return
           }
@@ -507,19 +368,32 @@ export async function POST(request: NextRequest) {
 
             if (hasCompleteKLineData) {
               // 情况1: AI返回了完整K线数据
-              open = Math.min(100, Math.max(0, point.open))
-              close = Math.min(100, Math.max(0, point.close))
+              // 强制连续性：open 必须等于上一年的 close（除了第一年）
+              open = index === 0 ? Math.min(90, Math.max(10, point.open)) : lastClose
+              close = Math.min(90, Math.max(10, point.close))
+
+              // ⭐ 关键修复：防止累积效应导致数据过于极端
+              // 如果 open 已经很高（>85）或很低（<15），强制 close 向中间回归
+              if (open > 85) {
+                // open已经很高，强close下行
+                close = Math.min(close, open - 3 - Math.floor(Math.random() * 8))
+                close = Math.max(close, 40) // 不能降得太糟
+              } else if (open < 15) {
+                // open已经很低，强close上行
+                close = Math.max(close, open + 3 + Math.floor(Math.random() * 8))
+                close = Math.min(close, 60) // 不能涨得太多
+              }
 
               // 强制校验 High/Low，确保有影线 (美观性调整)
               const bodyMax = Math.max(open, close)
               const bodyMin = Math.min(open, close)
 
               // 确保 High 至少比实体高 1-8 分
-              const rawHigh = Math.min(100, Math.max(0, point.high))
+              const rawHigh = Math.min(95, Math.max(5, point.high))
               high = Math.max(rawHigh, bodyMax + (rawHigh <= bodyMax ? 1 + Math.floor(Math.random() * 5) : 0))
 
               // 确保 Low 至少比实体低 1-8 分
-              const rawLow = Math.max(0, Math.min(100, point.low))
+              const rawLow = Math.max(5, Math.min(95, point.low))
               low = Math.min(rawLow, bodyMin - (rawLow >= bodyMin ? 1 + Math.floor(Math.random() * 5) : 0))
 
               // 更新 lastClose
@@ -527,20 +401,29 @@ export async function POST(request: NextRequest) {
             } else {
               // 情况2: AI没有返回完整K线数据，用算法生成
               // 保持连续性：Open 接上一个 Close
-              open = index === 0 ? Math.max(0, score - 2 + Math.floor(Math.random() * 5)) : lastClose
-              close = score
+              open = index === 0 ? Math.max(10, score - 2 + Math.floor(Math.random() * 5)) : lastClose
+              close = Math.min(90, Math.max(10, score))
 
-              // 确保 Open 和 Close 都在 0-100 范围内
-              open = Math.min(100, Math.max(0, open))
-              close = Math.min(100, Math.max(0, close))
+              // ⭐ 关键修复：同样防止累积效应
+              if (open > 85) {
+                close = Math.min(close, open - 3 - Math.floor(Math.random() * 8))
+                close = Math.max(close, 40)
+              } else if (open < 15) {
+                close = Math.max(close, open + 3 + Math.floor(Math.random() * 8))
+                close = Math.min(close, 60)
+              }
+
+              // 确保 Open 和 Close 都在 10-90 范围内
+              open = Math.min(90, Math.max(10, open))
+              close = Math.min(90, Math.max(10, close))
 
               // 构建实体范围
               const bodyMin = Math.min(open, close)
               const bodyMax = Math.max(open, close)
 
               // 强制生成明显影线
-              high = Math.min(100, bodyMax + 2 + Math.floor(Math.random() * 8))
-              low = Math.max(0, bodyMin - 2 - Math.floor(Math.random() * 8))
+              high = Math.min(95, bodyMax + 2 + Math.floor(Math.random() * 8))
+              low = Math.max(5, bodyMin - 2 - Math.floor(Math.random() * 8))
 
               // 更新 lastClose 供下一次迭代使用
               lastClose = close
