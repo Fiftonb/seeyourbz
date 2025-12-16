@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/divider'
 import { LunarDatePicker } from '@/components/ui/lunar-date-picker'
@@ -365,23 +364,25 @@ export default function LifeKLinePage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     日期类型
                   </Text>
-                  <div className="flex rounded-md overflow-hidden">
-                    <Button
+                  <div className="inline-flex rounded-lg overflow-hidden">
+                    <button
+                      type="button"
                       onClick={() => setDateType('lunar')}
-                      className={`px-4 py-1.5 ${dateType === 'lunar'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'lunar'
                         ? 'bg-red-600 text-white hover:bg-red-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       农历
-                    </Button>
-                    <Button
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setDateType('solar')}
-                      className={`px-4 py-1.5 ${dateType === 'solar'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'solar'
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       公历
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -390,23 +391,25 @@ export default function LifeKLinePage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     性别
                   </Text>
-                  <div className="flex rounded-md overflow-hidden">
-                    <Button
+                  <div className="inline-flex rounded-lg overflow-hidden">
+                    <button
+                      type="button"
                       onClick={() => setGender('MAN')}
-                      className={`px-4 py-1.5 ${gender === 'MAN'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${gender === 'MAN'
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       男
-                    </Button>
-                    <Button
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setGender('WOMAN')}
-                      className={`px-4 py-1.5 ${gender === 'WOMAN'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${gender === 'WOMAN'
                         ? 'bg-pink-600 text-white hover:bg-pink-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       女
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -422,11 +425,11 @@ export default function LifeKLinePage() {
                       className="w-full"
                     />
                   ) : (
-                    <Input
+                    <input
                       type="date"
                       value={selectedDate.toISOString().split('T')[0]}
                       onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                      className="w-full"
+                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base"
                     />
                   )}
                 </div>
@@ -436,11 +439,11 @@ export default function LifeKLinePage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     出生时间
                   </Text>
-                  <Input
+                  <input
                     type="time"
                     value={timeInput}
                     onChange={(e) => setTimeInput(e.target.value)}
-                    className="w-full"
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base"
                   />
                 </div>
               </div>
@@ -464,23 +467,25 @@ export default function LifeKLinePage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     API来源
                   </Text>
-                  <div className="flex rounded-md overflow-hidden">
-                    <Button
+                  <div className="inline-flex rounded-lg overflow-hidden">
+                    <button
+                      type="button"
                       onClick={() => setUseBuiltinApi(true)}
-                      className={`px-4 py-1.5 ${useBuiltinApi
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${useBuiltinApi
                         ? 'bg-green-600 text-white hover:bg-green-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       内置API
-                    </Button>
-                    <Button
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setUseBuiltinApi(false)}
-                      className={`px-4 py-1.5 ${!useBuiltinApi
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${!useBuiltinApi
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
                     >
                       自定义API
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -496,12 +501,12 @@ export default function LifeKLinePage() {
                       <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                         访问口令
                       </Text>
-                      <Input
+                      <input
                         type="text"
                         value={builtinPassword}
                         onChange={(e) => setBuiltinPassword(e.target.value)}
                         placeholder="请输入访问口令"
-                        className="w-full"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                       />
                     </div>
                   </>
@@ -520,12 +525,12 @@ export default function LifeKLinePage() {
                         <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           模型名称
                         </Text>
-                        <Input
+                        <input
                           type="text"
                           value={modelName}
                           onChange={(e) => setModelName(e.target.value)}
                           placeholder="gpt-4o"
-                          className="w-full"
+                          className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                         />
                       </div>
 
@@ -533,12 +538,12 @@ export default function LifeKLinePage() {
                         <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           API Base URL
                         </Text>
-                        <Input
+                        <input
                           type="text"
                           value={apiBaseUrl}
                           onChange={(e) => setApiBaseUrl(e.target.value)}
                           placeholder="https://api.openai.com/v1"
-                          className="w-full"
+                          className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                         />
                       </div>
                     </div>
@@ -547,12 +552,12 @@ export default function LifeKLinePage() {
                       <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                         API Key
                       </Text>
-                      <Input
+                      <input
                         type="password"
                         value={apiKey}
                         onChange={(e) => handleApiKeyChange(e.target.value)}
                         placeholder="sk-..."
-                        className="w-full"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                       />
                       <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         您的API Key仅用于本次请求，不会被保存
@@ -565,16 +570,15 @@ export default function LifeKLinePage() {
 
             {/* 生成按钮 */}
             <div className="text-center">
-              <Button
+              <button
+                type="button"
                 onClick={handleGenerate}
                 disabled={isLoading || (useBuiltinApi ? !builtinPassword.trim() : !apiKey.trim())}
-                className="bg-gradient-to-r from-green-600 to-indigo-600 hover:from-green-700 hover:to-indigo-700 text-white font-semibold py-3 px-8 text-lg rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="bg-gradient-to-r from-green-600 to-indigo-600 hover:from-green-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                <div className="flex items-center gap-2">
-                  <ChartBarIcon className="size-5" />
-                  {isLoading ? '生成中...' : '生成人生K线图'}
-                </div>
-              </Button>
+                <ChartBarIcon className="size-5" />
+                {isLoading ? '生成中...' : '生成人生K线图'}
+              </button>
               <Text className="text-sm text-gray-500 dark:text-gray-400 mt-3">
                 生成过程需要3-5分钟，请耐心等待
               </Text>

@@ -59,15 +59,15 @@ export default function AlmanacPage() {
           查看宜忌事项，选择吉日良时
         </Text>
         <div className="flex justify-center gap-3 items-center">
-          <Button
-            outline
+          <button
+            type="button"
             onClick={goToToday}
             disabled={isToday(selectedDate)}
-            className="text-sm px-4 py-2 transition-all duration-300 transform hover:scale-105"
+            className="text-sm px-4 py-2 rounded-lg font-medium transition-colors duration-200 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           >
             <SunIcon className="size-4 mr-1" />
             回到今天
-          </Button>
+          </button>
           <Badge color={isToday(selectedDate) ? "green" : "blue"}>
             <CalendarIcon className="size-4 mr-1" />
             {isToday(selectedDate) ? "今日黄历" : "自选查询"}
@@ -106,43 +106,43 @@ export default function AlmanacPage() {
       {/* 功能切换标签 */}
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-center mb-6">
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex gap-1">
-            <Button
-              plain
+          <div className="inline-flex rounded-lg overflow-hidden">
+            <button
+              type="button"
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 rounded-md transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center ${
                 activeTab === 'overview'
-                  ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  ? 'bg-amber-600 text-white hover:bg-amber-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <CalendarIcon className="size-4 mr-2" />
               概览信息
-            </Button>
-            <Button
-              plain
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('details')}
-              className={`px-4 py-2 rounded-md transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center ${
                 activeTab === 'details'
-                  ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  ? 'bg-amber-600 text-white hover:bg-amber-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <SparklesIcon className="size-4 mr-2" />
               详细信息
-            </Button>
-            <Button
-              plain
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('hours')}
-              className={`px-4 py-2 rounded-md transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center ${
                 activeTab === 'hours'
-                  ? 'bg-white dark:bg-gray-700 shadow-md text-gray-900 dark:text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-600'
+                  ? 'bg-amber-600 text-white hover:bg-amber-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <ClockIcon className="size-4 mr-2" />
               时辰宜忌
-            </Button>
+            </button>
           </div>
         </div>
 

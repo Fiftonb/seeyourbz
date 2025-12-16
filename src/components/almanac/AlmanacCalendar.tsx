@@ -91,31 +91,31 @@ export function AlmanacCalendar({ selectedDate, onDateChange }: AlmanacCalendarP
         
         {/* 视图切换 */}
         <div className="flex justify-center">
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex gap-1">
-            <Button
-              plain
+          <div className="inline-flex rounded-lg overflow-hidden">
+            <button
+              type="button"
               onClick={() => setViewType('calendar')}
-              className={`px-4 py-2 rounded-md transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center ${
                 viewType === 'calendar'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <CalendarIcon className="size-4 mr-2" />
               日历选择
-            </Button>
-            <Button
-              plain
+            </button>
+            <button
+              type="button"
               onClick={() => setViewType('quick')}
-              className={`px-4 py-2 rounded-md transition-all duration-300 ${
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center ${
                 viewType === 'quick'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <ArrowPathIcon className="size-4 mr-2" />
               快速跳转
-            </Button>
+            </button>
           </div>
         </div>
       </div>

@@ -489,23 +489,25 @@ export default function DestinyPage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     日期类型
                   </Text>
-                  <div className="flex rounded-md overflow-hidden">
-                    <Button 
+                  <div className="inline-flex rounded-lg overflow-hidden">
+                    <button 
+                      type="button"
                       onClick={() => setDateType('lunar')}
-                      className={`px-4 py-1.5 transition-all duration-300 ${dateType === 'lunar'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'lunar'
                         ? 'bg-red-600 text-white hover:bg-red-700' 
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                     >
                       农历
-                    </Button>
-                    <Button 
+                    </button>
+                    <button 
+                      type="button"
                       onClick={() => setDateType('solar')}
-                      className={`px-4 py-1.5 transition-all duration-300 ${dateType === 'solar'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'solar'
                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                     >
                       公历
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -575,23 +577,25 @@ export default function DestinyPage() {
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     性别
                   </Text>
-                  <div className="flex rounded-md overflow-hidden">
-                    <Button 
+                  <div className="inline-flex rounded-lg overflow-hidden">
+                    <button 
+                      type="button"
                       onClick={() => setGender('MAN')}
-                      className={`px-4 py-1.5 transition-all duration-300 ${gender === 'MAN'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${gender === 'MAN'
                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                     >
                       男
-                    </Button>
-                    <Button 
+                    </button>
+                    <button 
+                      type="button"
                       onClick={() => setGender('WOMAN')}
-                      className={`px-4 py-1.5 transition-all duration-300 ${gender === 'WOMAN'
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${gender === 'WOMAN'
                         ? 'bg-pink-600 text-white hover:bg-pink-700' 
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                     >
                       女
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -647,22 +651,17 @@ export default function DestinyPage() {
                 <Heading level={3} className="text-lg font-semibold text-gray-900 dark:text-white">
                   开始计算
                 </Heading>
-                <Button
+                <button
+                  type="button"
                   onClick={handleCalculate}
                   disabled={isCalculating}
-                  className={`w-full bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700 text-white font-semibold py-3 px-6 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                    isCalculating 
-                      ? 'animate-pulse bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
-                      : ''
-                  }`}
+                  className="w-full bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    {isCalculating && (
-                      <SparklesIcon className="size-4 animate-spin" />
-                    )}
-                    {isCalculating ? '计算中...' : '计算八字命理'}
-                  </div>
-                </Button>
+                  {isCalculating && (
+                    <SparklesIcon className="size-4 animate-spin" />
+                  )}
+                  {isCalculating ? '计算中...' : '计算八字命理'}
+                </button>
               </div>
             </div>
 
@@ -673,39 +672,37 @@ export default function DestinyPage() {
                   结果操作
                 </Heading>
                 <div className="flex justify-center gap-3">
-                  <Button
-                    outline
+                  <button
+                    type="button"
                     onClick={handleCopy}
                     disabled={!calculationResult}
-                    className={`border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-4 py-2 ${
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border-2 transition-colors duration-200 flex items-center gap-2 ${
                       copySuccess 
-                        ? 'animate-bounce bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600' 
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600' 
                         : calculationResult 
-                          ? '' 
-                          : 'opacity-50 cursor-not-allowed'
+                          ? 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white' 
+                          : 'border-gray-300 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      {copySuccess && (
-                        <SparklesIcon className="size-4 animate-pulse" />
-                      )}
-                      {copySuccess ? '复制成功！' : '复制结果'}
-                    </div>
-                  </Button>
+                    {copySuccess && (
+                      <SparklesIcon className="size-4" />
+                    )}
+                    {copySuccess ? '复制成功！' : '复制结果'}
+                  </button>
                   
-                  <Button
-                    outline
+                  <button
+                    type="button"
                     onClick={handleJianPi}
                     disabled={!structuredResult}
-                    className={`border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white font-semibold px-4 py-2 ${
-                      !structuredResult ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border-2 transition-colors duration-200 flex items-center gap-2 ${
+                      structuredResult 
+                        ? 'border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white' 
+                        : 'border-gray-300 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <SparklesIcon className="size-4" />
-                      简批命理
-                    </div>
-                  </Button>
+                    <SparklesIcon className="size-4" />
+                    简批命理
+                  </button>
                 </div>
               </div>
             </div>

@@ -125,25 +125,25 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
                 <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   性别
                 </Text>
-                <div className="flex rounded-md overflow-hidden">
-                  <Button 
+                <div className="inline-flex rounded-lg overflow-hidden">
+                  <button 
                     type="button"
                     onClick={() => handleInputChange('gender', 'male')}
-                    className={`px-4 py-1.5 transition-all duration-300 ${userInput.gender === 'male'
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${userInput.gender === 'male'
                       ? 'bg-blue-600 text-white hover:bg-blue-700' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                   >
                     男
-                  </Button>
-                  <Button 
+                  </button>
+                  <button 
                     type="button"
                     onClick={() => handleInputChange('gender', 'female')}
-                    className={`px-4 py-1.5 transition-all duration-300 ${userInput.gender === 'female'
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${userInput.gender === 'female'
                       ? 'bg-pink-600 text-white hover:bg-pink-700' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                   >
                     女
-                  </Button>
+                  </button>
                 </div>
               </div>
 
@@ -152,25 +152,25 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
                 <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   日期类型
                 </Text>
-                <div className="flex rounded-md overflow-hidden">
-                  <Button 
+                <div className="inline-flex rounded-lg overflow-hidden">
+                  <button 
                     type="button"
                     onClick={() => setDateType('lunar')}
-                    className={`px-4 py-1.5 transition-all duration-300 ${dateType === 'lunar'
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'lunar'
                       ? 'bg-pink-600 text-white hover:bg-pink-700' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                   >
                     农历
-                  </Button>
-                  <Button 
+                  </button>
+                  <button 
                     type="button"
                     onClick={() => setDateType('solar')}
-                    className={`px-4 py-1.5 transition-all duration-300 ${dateType === 'solar'
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${dateType === 'solar'
                       ? 'bg-blue-600 text-white hover:bg-blue-700' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                   >
                     公历
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -263,22 +263,16 @@ export function PeachBlossomForm({ onSubmit, isLoading = false }: PeachBlossomFo
             <Heading level={3} className="text-lg font-semibold text-gray-900 dark:text-white">
               开始测算
             </Heading>
-            <Button
+            <button
               type="submit"
               disabled={isLoading || !selectedDate || !userInput.birthTime}
-              className={`w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-6 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                isLoading 
-                  ? 'animate-pulse bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
-                  : ''
-              }`}
+              className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <div className="flex items-center justify-center gap-2">
-                {isLoading && (
-                  <HeartIcon className="size-4 animate-spin" />
-                )}
-                {isLoading ? '分析中...' : '开始测算桃花运'}
-              </div>
-            </Button>
+              {isLoading && (
+                <HeartIcon className="size-4 animate-spin" />
+              )}
+              {isLoading ? '分析中...' : '开始测算桃花运'}
+            </button>
           </div>
         </div>
       </form>

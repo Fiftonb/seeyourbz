@@ -321,26 +321,28 @@ export function Shengjiao() {
   const renderActionButtons = () => {
     if (!result) {
       return (
-        <Button
+        <button
+          type="button"
           onClick={throwJiao}
           disabled={isThrowing || !question.trim()}
           className="flex-1 bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
         >
           掷筊
-        </Button>
+        </button>
       );
     }
 
     // 圣筊或哭筊：只能重新开始（已有明确意见）
     if (result === 'sheng' || result === 'ku') {
       return (
-        <Button
+        <button
+          type="button"
           onClick={resetJiao}
           disabled={isThrowing}
-          className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white disabled:text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+          className="flex-1 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-black border border-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
         >
           重新开始
-        </Button>
+        </button>
       );
     }
 
@@ -348,20 +350,22 @@ export function Shengjiao() {
     if (result === 'xiao') {
       return (
         <>
-          <Button
+          <button
+            type="button"
             onClick={throwJiao}
             disabled={isThrowing}
             className="flex-1 bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
           >
             继续掷筊
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
             onClick={resetJiao}
             disabled={isThrowing}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white disabled:text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            className="flex-1 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-black border border-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
           >
             重新开始
-          </Button>
+          </button>
         </>
       );
     }

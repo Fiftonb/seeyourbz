@@ -51,23 +51,25 @@ export function CalendarDemo() {
               日期选择模式：
             </Text>
             <div className="flex items-center space-x-2">
-              <div className="flex rounded-md overflow-hidden">
-                <Button 
+              <div className="inline-flex rounded-lg overflow-hidden">
+                <button 
+                  type="button"
                   onClick={() => setUseLunarCalendar(false)}
-                  className={`px-4 py-1.5 transition-all duration-300 ${!useLunarCalendar 
+                  className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${!useLunarCalendar 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                 >
                   公历
-                </Button>
-                <Button 
+                </button>
+                <button 
+                  type="button"
                   onClick={() => setUseLunarCalendar(true)}
-                  className={`px-4 py-1.5 transition-all duration-300 ${useLunarCalendar 
+                  className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${useLunarCalendar 
                     ? 'bg-red-600 text-white hover:bg-red-700' 
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                 >
                   农历
-                </Button>
+                </button>
               </div>
             </div>
           </div>
