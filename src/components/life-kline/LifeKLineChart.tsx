@@ -10,7 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  Label
+  Label,
+  Cell
 } from 'recharts'
 import { KLinePoint } from '@/lib/life-kline/types'
 
@@ -72,45 +73,92 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // K线蜡烛形状组件
 const CandleShape = (props: any) => {
-  const { x, y, width, height, payload, yAxis } = props
+  const { x, y, width, height, payload } = props
 
   const isUp = payload.close >= payload.open
-  const color = isUp ? '#22c55e' : '#ef4444' // Green Up, Red Down
-  const strokeColor = isUp ? '#16a34a' : '#dc2626' // Slightly darker for stroke
-  
+  // Colors matching the current legend (Green=Rise, Red=Fall)
+  const color = isUp ? '#10b981' : '#ef4444'
+
+  // 计算实体的上下边界值
+  const bodyMax = Math.max(payload.open, payload.close)
+  const bodyMin = Math.min(payload.open, payload.close)
+  const bodyDiff = bodyMax - bodyMin
+
   let highY = y
   let lowY = y + height
 
-  if (yAxis && typeof yAxis.scale === 'function') {
-    try {
-      highY = yAxis.scale(payload.high)
-      lowY = yAxis.scale(payload.low)
-    } catch (e) {
-      highY = y
-      lowY = y + height
-    }
+  // 基于实体位置推算影线位置
+  // y 对应 bodyMax（实体顶部），y + height 对应 bodyMin（实体底部）
+  if (bodyDiff > 0 && height > 0) {
+    // 有实体高度时，通过实体计算每单位对应的像素数
+    const pixelsPerUnit = height / bodyDiff
+    highY = y - (payload.high - bodyMax) * pixelsPerUnit
+    lowY = (y + height) + (bodyMin - payload.low) * pixelsPerUnit
+  } else {
+    // Doji（十字星）情况：实体为0，需要用固定domain来计算
+    // 假设 Y 轴 domain 是 [0, 200]，图表高度约 500px
+    // 这里用一个估算的 pixelsPerUnit
+    const estimatedChartHeight = 500
+    const estimatedPixelsPerUnit = estimatedChartHeight / 200
+    highY = y - (payload.high - bodyMax) * estimatedPixelsPerUnit
+    lowY = y + (bodyMin - payload.low) * estimatedPixelsPerUnit
   }
 
+  // Calculate center of the band
   const center = x + width / 2
 
-  // Enforce minimum body height so flat doji candles are visible
-  const renderHeight = height < 1 ? 1 : height
+  // Fixed thin width for the candle body
+  const candleWidth = Math.min(6, width * 0.8)
+  const candleX = center - candleWidth / 2
+
+  // Enforce minimum body height (visual fix for dojis)
+  // Note: changing 'height' here only affects visual rect, not shadow calculations
+  const renderHeight = Math.max(1, height)
 
   return (
     <g>
-      <line x1={center} y1={highY} x2={center} y2={lowY} stroke={strokeColor} strokeWidth={1.5} />
-      <rect 
-        x={x} 
-        y={y} 
-        width={width} 
-        height={renderHeight} 
-        fill={color} 
-        stroke={strokeColor}
-        strokeWidth={0.5}
+      {/* 影线 - 放在实体上方确保可见 */}
+      <line
+        x1={center}
+        y1={highY}
+        x2={center}
+        y2={lowY}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      {/* K线实体 */}
+      <rect
+        x={candleX}
+        y={y}
+        width={candleWidth}
+        height={renderHeight}
+        fill={color}
+        stroke={color}
+        strokeWidth={0}
       />
     </g>
   )
 }
+
+// Add Custom X-Axis Tick for DaYun (Great Fortune)
+const DaYunAxisTick = (props: any) => {
+  const { x, y, payload, data, visibleIndices } = props;
+  const point = data[payload.index];
+
+  // 只在预计算的可见索引中显示
+  if (!visibleIndices || !visibleIndices.includes(payload.index)) return null;
+
+  // 只提取大运的核心部分（干支），去掉括号内容和额外文字
+  const daYunLabel = point.daYun ? point.daYun.replace(/\s*\(.*\)\s*/g, '').trim().slice(0, 2) : '';
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={15} dy={0} textAnchor="middle" fill="#6b7280" fontSize={10} className="dark:fill-gray-400">
+        {daYunLabel}
+      </text>
+    </g>
+  );
+};
 
 export default function LifeKLineChart({ data }: LifeKLineChartProps) {
   const [selectedPoint, setSelectedPoint] = useState<KLinePoint | null>(null)
@@ -120,24 +168,43 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
     bodyRange: [Math.min(d.open, d.close), Math.max(d.open, d.close)],
   }))
 
+  // 动态计算 Y 轴范围，让数据更紧凑
+  const minLow = Math.min(...data.map(d => d.low))
+  const maxHigh = Math.max(...data.map(d => d.high))
+  const yMin = Math.max(0, Math.floor(minLow / 20) * 20 - 10) // 向下取整到20的倍数再减10
+  const yMax = Math.min(200, Math.ceil(maxHigh / 20) * 20 + 10) // 向上取整到20的倍数再加10
+
+  // 预计算哪些大运标签可以显示（确保间距至少 MIN_GAP 年）
+  const MIN_GAP = 8 // 标签之间最小间距（年）
+  const visibleDaYunIndices: number[] = []
+  let lastVisibleIndex = -MIN_GAP // 初始化为负数，确保第一个能显示
+  
+  data.forEach((point, index) => {
+    const isDaYunStart = index === 0 || point.daYun !== data[index - 1].daYun
+    if (isDaYunStart && (index - lastVisibleIndex) >= MIN_GAP) {
+      visibleDaYunIndices.push(index)
+      lastVisibleIndex = index
+    }
+  })
+
   // Identify Da Yun change points to draw reference lines
   const daYunChanges = data.filter((d, i) => {
     if (i === 0) return true
-    return d.daYun !== data[i-1].daYun
+    return d.daYun !== data[i - 1].daYun
   })
 
   // Handle bar click
   const handleBarClick = (data: any) => {
     if (data && data.age) {
-        // Find the original point data to ensure type safety
-        const originalPoint = data as KLinePoint
-        setSelectedPoint(originalPoint)
-        
-        // Optional: Scroll to the table row
-        const rowElement = document.getElementById(`kline-row-${originalPoint.age}`)
-        if (rowElement) {
-          rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
+      // Find the original point data to ensure type safety
+      const originalPoint = data as KLinePoint
+      setSelectedPoint(originalPoint)
+
+      // Optional: Scroll to the table row
+      const rowElement = document.getElementById(`kline-row-${originalPoint.age}`)
+      if (rowElement) {
+        rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
     }
   }
 
@@ -165,66 +232,142 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
           </span>
         </div>
       </div>
-      
+
       {/* K线图 */}
-      <div className="w-full h-[500px] md:h-[600px] bg-white dark:bg-gray-800 p-2 md:p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="w-full h-[500px] md:h-[600px] bg-gray-900 border border-gray-800 rounded-xl shadow-lg relative overflow-hidden">
+        {/* Decorative Gradient Background */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-800/20 to-transparent pointer-events-none" />
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={transformedData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:opacity-20" />
-            
-            <XAxis 
-              dataKey="age" 
+          <ComposedChart data={transformedData} margin={{ top: 10, right: 15, left: 0, bottom: 5 }}>
+            {/* Background Grid - Dark theme optimized */}
+            <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#374151" opacity={0.3} />
+
+            {/* Age Axis */}
+            <XAxis
+              dataKey="age"
               tick={{ fontSize: 10, fill: '#6b7280' }}
-              interval={9} 
-              axisLine={{ stroke: '#e5e7eb' }}
+              interval={9}
+              axisLine={false}
               tickLine={false}
-              label={{ value: '年龄', position: 'insideBottomRight', offset: -5, fontSize: 10, fill: '#9ca3af' }} 
+              dy={5}
+              padding={{ left: 5, right: 5 }}
             />
-            
-            <YAxis 
-              domain={[0, 100]} 
+
+            {/* Hidden Axis for proper alignment of DaYun labels if needed, or just use custom tick on secondary XAxis */}
+            <XAxis
+              dataKey="age"
+              axisLine={false}
+              tickLine={false}
+              tick={<DaYunAxisTick data={data} visibleIndices={visibleDaYunIndices} />}
+              xAxisId="dayun"
+              interval={0} // Show all ticks so our custom filter works
+              dy={20}
+            />
+
+            <YAxis
+              domain={[yMin, yMax]}
               tick={{ fontSize: 10, fill: '#6b7280' }}
               axisLine={false}
               tickLine={false}
-              label={{ value: '运势分', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} 
+              orientation="left"
+              width={30}
             />
-            
-            <Tooltip 
-              content={<CustomTooltip />} 
-              cursor={{ stroke: '#9ca3af', strokeWidth: 1, strokeDasharray: '4 4' }} 
-            />
-            
-            {/* Da Yun Reference Lines */}
-            {daYunChanges.map((point, index) => (
-              <ReferenceLine 
-                key={`dayun-${index}`} 
-                x={point.age} 
-                stroke="#cbd5e1" 
-                strokeDasharray="3 3" 
-                strokeWidth={1}
-              >
-                <Label 
-                  value={point.daYun} 
-                  position="top" 
-                  fill="#6366f1" 
-                  fontSize={10} 
-                  fontWeight="bold"
-                  className="hidden md:block"
-                />
-              </ReferenceLine>
-            ))}
 
-            <Bar 
-              dataKey="bodyRange" 
-              shape={<CandleShape />} 
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#4b5563', strokeWidth: 1, strokeDasharray: '3 3' }}
+            />
+
+            <Bar
+              dataKey="bodyRange"
+              shape={<CandleShape />}
               isAnimationActive={true}
               animationDuration={1500}
               onClick={handleBarClick}
-              cursor="pointer"
+              xAxisId={0} // Default axis
             />
-            
+
           </ComposedChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* 核心指标仪表盘 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {(() => {
+          if (!data.length) return null
+
+          // 计算指标
+          const scores = data.map(d => d.score)
+          const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+
+          const peakPoint = data.reduce((max, p) => p.high > max.high ? p : max, data[0])
+          const troughPoint = data.reduce((min, p) => p.low < min.low ? p : min, data[0])
+
+          // 计算波动率 (标准差)
+          const variance = scores.reduce((a, b) => a + Math.pow(b - avgScore, 2), 0) / scores.length
+          const stdDev = Math.sqrt(variance)
+
+          let volatilityText = "平稳"
+          if (stdDev > 15) volatilityText = "大起大落"
+          else if (stdDev > 10) volatilityText = "波澜壮阔"
+          else if (stdDev > 5) volatilityText = "起伏有致"
+
+          return (
+            <>
+              {/* 平均分 */}
+              <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col justify-between h-24 shadow-lg">
+                <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+                  <div className="p-1 bg-blue-500/10 rounded">
+                    <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  平均运势分
+                </div>
+                <div className="text-3xl font-bold text-white font-mono mt-1">{avgScore}</div>
+              </div>
+
+              {/* 人生巅峰 */}
+              <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col justify-between h-24 shadow-lg">
+                <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+                  <div className="p-1 bg-green-500/10 rounded">
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  人生巅峰
+                </div>
+                <div className="text-2xl font-bold text-white font-mono mt-1">{peakPoint.year}年</div>
+              </div>
+
+              {/* 人生低谷 */}
+              <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col justify-between h-24 shadow-lg">
+                <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+                  <div className="p-1 bg-red-500/10 rounded">
+                    <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                    </svg>
+                  </div>
+                  人生低谷
+                </div>
+                <div className="text-2xl font-bold text-white font-mono mt-1">{troughPoint.year}年</div>
+              </div>
+
+              {/* 波折程度 */}
+              <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col justify-between h-24 shadow-lg">
+                <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+                  <div className="p-1 bg-purple-500/10 rounded">
+                    <svg className="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  波折程度
+                </div>
+                <div className="text-2xl font-bold text-white mt-1">{volatilityText}</div>
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* 流年详情列表 - 可选显示 */}
@@ -249,24 +392,22 @@ export default function LifeKLineChart({ data }: LifeKLineChartProps) {
                 const isUp = point.close >= point.open
                 const isSelected = point.age === selectedPoint?.age
                 return (
-                  <tr 
+                  <tr
                     key={index}
                     id={`kline-row-${point.age}`}
                     onClick={() => setSelectedPoint(point)}
-                    className={`border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer transition-colors ${
-                      isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-l-indigo-500' : ''
-                    }`}
+                    className={`border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-l-indigo-500' : ''
+                      }`}
                   >
                     <td className="px-4 py-2 font-mono">{point.age}岁</td>
                     <td className="px-4 py-2 font-mono">{point.year}</td>
                     <td className="px-4 py-2 font-medium">{point.ganZhi}</td>
                     <td className="px-4 py-2 text-indigo-600 dark:text-indigo-400">{point.daYun}</td>
                     <td className="px-4 py-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        isUp 
-                          ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400' 
-                          : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400'
-                      }`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isUp
+                        ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
+                        : 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400'
+                        }`}>
                         {isUp ? '吉 ▲' : '凶 ▼'} {point.score}分
                       </span>
                     </td>

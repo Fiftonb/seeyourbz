@@ -22,9 +22,11 @@ export default function LifeKLinePage() {
   const [gender, setGender] = useState<'MAN' | 'WOMAN'>('MAN')
 
   // API配置状态
+  const [useBuiltinApi, setUseBuiltinApi] = useState<boolean>(true) // 默认使用内置API
+  const [builtinPassword, setBuiltinPassword] = useState<string>('')
   const [apiKey, setApiKey] = useState<string>('')
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://myai.naiai.net/v1')
-  const [modelName, setModelName] = useState<string>('gemini-2.5-flash-lite')
+  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://api.openai.com/v1')
+  const [modelName, setModelName] = useState<string>('gpt-4o')
 
   // 结果状态
   const [result, setResult] = useState<LifeKLineResult | null>(null)
@@ -75,14 +77,21 @@ export default function LifeKLinePage() {
 
   // 处理生成
   const handleGenerate = useCallback(async () => {
-    // 验证API配置
-    if (!apiKey.trim()) {
-      setError('请填写 API Key')
-      return
-    }
-    if (!apiBaseUrl.trim()) {
-      setError('请填写 API Base URL')
-      return
+    // 验证配置
+    if (useBuiltinApi) {
+      if (!builtinPassword.trim()) {
+        setError('请输入访问口令')
+        return
+      }
+    } else {
+      if (!apiKey.trim()) {
+        setError('请填写 API Key')
+        return
+      }
+      if (!apiBaseUrl.trim()) {
+        setError('请填写 API Base URL')
+        return
+      }
     }
 
     setIsLoading(true)
@@ -122,9 +131,12 @@ export default function LifeKLinePage() {
             endAge: d.endAge,
             ganZhi: d.sixtyCycle
           })),
-          modelName,
-          apiBaseUrl,
-          apiKey
+          // 根据是否使用内置API发送不同参数
+          useBuiltinApi,
+          builtinPassword: useBuiltinApi ? builtinPassword : undefined,
+          modelName: useBuiltinApi ? undefined : modelName,
+          apiBaseUrl: useBuiltinApi ? undefined : apiBaseUrl,
+          apiKey: useBuiltinApi ? undefined : apiKey
         })
       })
 
@@ -179,7 +191,7 @@ export default function LifeKLinePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [selectedDate, timeInput, gender, apiKey, apiBaseUrl, modelName])
+  }, [selectedDate, timeInput, gender, useBuiltinApi, builtinPassword, apiKey, apiBaseUrl, modelName])
 
   // 重新生成
   const handleReset = () => {
@@ -447,56 +459,107 @@ export default function LifeKLinePage() {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800 mb-4">
-                  <Text className="text-sm text-amber-700 dark:text-amber-300">
-                    <strong>提示：</strong>本功能需要使用AI大模型进行命理分析。请填写兼容OpenAI格式的API配置。
-                    推荐使用 GPT-4o、Gemini 2.5 Pro 或 Claude 3.5 Sonnet 等模型。
-                  </Text>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                      模型名称
-                    </Text>
-                    <Input
-                      type="text"
-                      value={modelName}
-                      onChange={(e) => setModelName(e.target.value)}
-                      placeholder="gpt-4o"
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                      API Base URL
-                    </Text>
-                    <Input
-                      type="text"
-                      value={apiBaseUrl}
-                      onChange={(e) => setApiBaseUrl(e.target.value)}
-                      placeholder="https://api.openai.com/v1"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-
+                {/* API来源选择 */}
                 <div>
                   <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    API Key
+                    API来源
                   </Text>
-                  <Input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => handleApiKeyChange(e.target.value)}
-                    placeholder="sk-..."
-                    className="w-full"
-                  />
-                  <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    您的API Key仅用于本次请求，不会被保存
-                  </Text>
+                  <div className="flex rounded-md overflow-hidden">
+                    <Button
+                      onClick={() => setUseBuiltinApi(true)}
+                      className={`px-4 py-1.5 ${useBuiltinApi
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
+                    >
+                      内置API
+                    </Button>
+                    <Button
+                      onClick={() => setUseBuiltinApi(false)}
+                      className={`px-4 py-1.5 ${!useBuiltinApi
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'}`}
+                    >
+                      自定义API
+                    </Button>
+                  </div>
                 </div>
+
+                {useBuiltinApi ? (
+                  /* 内置API - 只需要输入口令 */
+                  <>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                      <Text className="text-sm text-green-700 dark:text-green-300">
+                        <strong>提示：</strong>使用内置API需要输入访问口令。如果您没有口令，请联系管理员获取。
+                      </Text>
+                    </div>
+                    <div>
+                      <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                        访问口令
+                      </Text>
+                      <Input
+                        type="text"
+                        value={builtinPassword}
+                        onChange={(e) => setBuiltinPassword(e.target.value)}
+                        placeholder="请输入访问口令"
+                        className="w-full"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  /* 自定义API配置 */
+                  <>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800 mb-4">
+                      <Text className="text-sm text-amber-700 dark:text-amber-300">
+                        <strong>提示：</strong>本功能需要使用AI大模型进行命理分析。请填写兼容OpenAI格式的API配置。
+                        推荐使用 GPT-4o、Gemini 2.5 Pro 或 Claude 3.5 Sonnet 等模型。
+                      </Text>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                          模型名称
+                        </Text>
+                        <Input
+                          type="text"
+                          value={modelName}
+                          onChange={(e) => setModelName(e.target.value)}
+                          placeholder="gpt-4o"
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                          API Base URL
+                        </Text>
+                        <Input
+                          type="text"
+                          value={apiBaseUrl}
+                          onChange={(e) => setApiBaseUrl(e.target.value)}
+                          placeholder="https://api.openai.com/v1"
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Text className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                        API Key
+                      </Text>
+                      <Input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => handleApiKeyChange(e.target.value)}
+                        placeholder="sk-..."
+                        className="w-full"
+                      />
+                      <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        您的API Key仅用于本次请求，不会被保存
+                      </Text>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -504,7 +567,7 @@ export default function LifeKLinePage() {
             <div className="text-center">
               <Button
                 onClick={handleGenerate}
-                disabled={isLoading || !apiKey.trim()}
+                disabled={isLoading || (useBuiltinApi ? !builtinPassword.trim() : !apiKey.trim())}
                 className="bg-gradient-to-r from-green-600 to-indigo-600 hover:from-green-700 hover:to-indigo-700 text-white font-semibold py-3 px-8 text-lg rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 <div className="flex items-center gap-2">

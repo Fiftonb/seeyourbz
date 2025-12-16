@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { LifeKLineRequest, BAZI_SYSTEM_INSTRUCTION } from '@/lib/life-kline/types'
 
+// 内置API配置（硬编码，不暴露给前端）
+const BUILTIN_API_CONFIG = {
+  apiBaseUrl: 'https://myai.naiai.net/v1',
+  modelName: 'gemini-2.5-flash-lite',
+  apiKey: 'sk-isVIFFgEAzwArCpU036mpYTkI0MYtvDN92HFcZm4cebKlTsD',
+  password: '哪啊哪啊' // 访问口令
+}
+
 // 判断天干阴阳
 const getStemPolarity = (pillar: string): 'YANG' | 'YIN' => {
   if (!pillar) return 'YANG'
@@ -29,27 +37,51 @@ export async function POST(request: NextRequest) {
       hourPillar,
       startAge,
       firstDaYun,
-      name
+      name,
+      useBuiltinApi,
+      builtinPassword
     } = body
 
-    // 验证必填字段
-    if (!apiKey || !apiKey.trim()) {
-      return NextResponse.json({
-        success: false,
-        error: '请填写有效的 API Key'
-      }, { status: 400 })
-    }
+    // 根据是否使用内置API来决定配置
+    let finalApiKey: string
+    let finalApiBaseUrl: string
+    let finalModelName: string
 
-    if (!apiBaseUrl || !apiBaseUrl.trim()) {
-      return NextResponse.json({
-        success: false,
-        error: '请填写有效的 API Base URL'
-      }, { status: 400 })
+    if (useBuiltinApi) {
+      // 验证口令
+      if (!builtinPassword || builtinPassword !== BUILTIN_API_CONFIG.password) {
+        return NextResponse.json({
+          success: false,
+          error: '口令错误，请输入正确的访问口令'
+        }, { status: 403 })
+      }
+      // 使用内置配置
+      finalApiKey = BUILTIN_API_CONFIG.apiKey
+      finalApiBaseUrl = BUILTIN_API_CONFIG.apiBaseUrl
+      finalModelName = BUILTIN_API_CONFIG.modelName
+    } else {
+      // 验证用户自定义配置
+      if (!apiKey || !apiKey.trim()) {
+        return NextResponse.json({
+          success: false,
+          error: '请填写有效的 API Key'
+        }, { status: 400 })
+      }
+
+      if (!apiBaseUrl || !apiBaseUrl.trim()) {
+        return NextResponse.json({
+          success: false,
+          error: '请填写有效的 API Base URL'
+        }, { status: 400 })
+      }
+      finalApiKey = apiKey
+      finalApiBaseUrl = apiBaseUrl
+      finalModelName = modelName && modelName.trim() ? modelName.trim() : 'gpt-4o'
     }
 
     // 清理URL
-    const cleanBaseUrl = apiBaseUrl.replace(/\/+$/, '')
-    const targetModel = modelName && modelName.trim() ? modelName.trim() : 'gpt-4o'
+    const cleanBaseUrl = finalApiBaseUrl.replace(/\/+$/, '')
+    const targetModel = finalModelName
 
     // 计算大运顺逆
     const genderStr = gender === 'MAN' ? '男 (乾造)' : '女 (坤造)'
@@ -140,6 +172,106 @@ export async function POST(request: NextRequest) {
       3. 严格按照 JSON Schema 生成数据，包含 analysis 和 chartPoints 两个顶级字段
       4. chartPoints 必须包含完整的100个年份数据点
       
+      【⚠️ 关键要求 - 数值必须有变化】
+      
+      **1. 年度间的差异（不同年份之间）：**
+      - 严禁所有年份使用相同的数值！比如不能所有年份都是75分
+      - 每一年的综合score都必须根据该年的流年干支和大运单独计算
+      - 参考评分标准：
+        * 极佳年份（三合、六合、天乙贵人等）：75-95分
+        * 平顺年份（无明显吉凶）：50-70分
+        * 波折年份（冲、刑、害等）：20-45分
+      - 不同大运阶段应该有明显的整体趋势差异
+      
+      **2. 年度内的波动（同一年内的open/close/high/low）：⚠️ 这个最重要！**
+      - **open（年初运势）**：代表该年1-3月的运势
+      - **close（年尾运势）**：代表该年10-12月的运势
+      - **high（年内最高点）**：该年运势最好的月份，必须 ≥ max(open, close)
+      - **low（年内最低点）**：该年运势最差的月份，必须 ≤ min(open, close)
+      - **score（综合评分）**：整年的平均运势水平，通常在open和close之间
+      
+      ⚠️ **禁止将同一年的 open、close、high、low 都设置成相同的值！**
+      例如：禁止出现 "open": 75, "close": 75, "high": 75, "low": 75
+      
+      **正确示例：**
+      {
+        "age": 25,
+        "score": 72,
+        "open": 68,     // 年初运势一般
+        "close": 78,    // 年尾运势转好（阳线，年运上扬）
+        "high": 85,     // 年中有高峰期
+        "low": 62,      // 年初有低谷
+        "reason": "流年干支与日主相生，虽年初略有波折，但整体运势逐步攀升..."
+      }
+      
+      - K线的 open/close 要体现年内运势变化（年初和年尾通常不同）
+      - high/low 要体现该年的峰谷差异
+      - close > open 为阳线（年运渐好），close < open 为阴线（年运走弱）
+      
+      **3. 阴阳线混合（100年中必须有起有落）：**
+      ⚠️ **禁止所有年份都是阳线（绿色）或都是阴线（红色）！**
+      - 人生有起有落，100年中必须同时包含阳线和阴线
+      - 根据命理分析合理分配：
+        * 吉运年份：close > open（阳线，绿色）
+        * 凶运年份：close < open（阴线，红色）
+        * 平运年份：close ≈ open（小阳线或小阴线）
+      - 参考比例：阳线约占50-70%，阴线约占30-50%
+      - 大运交替、刑冲克害年份应该多出现阴线
+      - 三合六合、喜神得力年份应该多出现阳线
+      
+      **错误示例（禁止）：**
+      ❌ 所有100年都是 close > open（全是绿色K线）
+      ❌ 所有100年都是 close < open（全是红色K线）
+      
+      **正确示例（必须这样）：**
+      ✅ 混合示例：
+      - 第1年：open=52, close=58（阳线，年运上扬）
+      - 第2年：open=58, close=55（阴线，略有回落）
+      - 第3年：open=55, close=62（阳线，转好）
+      - 第4年：open=62, close=48（阴线，遇冲克，运势下滑）
+      - 第5年：open=48, close=52（小阳线，逐步恢复）
+      
+      **4. K线形态多样性（最重要！避免单调）：**
+      ⚠️ **必须生成不同形态的K线，不能所有K线看起来都一样！**
+      
+      真实的K线图有丰富的形态变化，你必须模拟这种多样性：
+      
+      **实体大小变化：**
+      - **大阳线**（吉运强势）：close - open ≥ 15分，例如 open=50, close=70
+      - **小阳线**（微涨）：close - open ≤ 5分，例如 open=55, close=58
+      - **大阴线**（凶运明显）：open - close ≥ 15分，例如 open=75, close=55
+      - **小阴线**（微跌）：open - close ≤ 5分，例如 open=60, close=57
+      - **十字星**（转折点）：open ≈ close（差距≤2分），但high和low要有明显区间
+      
+      
+      **影线长度变化：** ⚠️ 影线必须明显可见！
+      - **长上影线**（上方受阻，至少占30%）：high 比 max(open,close) 高出**15-25分**
+        例如：open=60, close=65, high=85, low=58（年中大幅冲高后回落）
+      - **长下影线**（下方支撑，至少占30%）：low 比 min(open,close) 低出**15-25分**  
+        例如：open=55, close=60, high=62, low=35（年初探底后强力反弹）
+      - **双长影线**（震荡剧烈，占10-15%）：上下影线都很长
+        例如：open=60, close=62, high=85, low=40（全年大起大落）
+      - **短影线**（平稳期，占30-40%）：high/low 与实体差距3-8分
+      - **无影线**（极强势/弱势，占5-10%）：high=max(open,close)，low=min(open,close)
+      
+      **重要：影线必须足够长，才能在图表上看到！**
+      禁止所有K线的影线都很短，至少50%以上的K线要有明显的上影线或下影线（长度≥10分）
+      
+      
+      **形态组合示例：**
+      年龄25: 开盘50, 收盘68, 最高75, 最低48   (大阳线，长上影)
+      年龄26: 开盘68, 收盘72, 最高78, 最低65   (小阳线)
+      年龄27: 开盘72, 收盘52, 最高72, 最低45   (大阴线，长下影)
+      年龄28: 开盘52, 收盘50, 最高68, 最低42   (十字星，上下影都长)
+      年龄29: 开盘50, 收盘65, 最高65, 最低50   (大阳线，无影线，强势)
+      
+      
+      参考比例（100年中）：
+      - 大阳线/大阴线：各占15-20%
+      - 中等实体：占40-50%
+      - 小实体/十字星：占20-30%
+      - 长影线K线：占30-40%
+      
       【重要：JSON格式要求】
       返回的JSON必须完全遵循以下格式（字段名不得更改）：
       {
@@ -159,18 +291,42 @@ export async function POST(request: NextRequest) {
         },
         "chartPoints": [
           {
-            "age": 数字,
+            "age": 1,
             "year": 数字,
             "ganZhi": "干支字符串",
             "daYun": "大运字符串",
-            "score": 数字0-100,
-            "open": 数字0-100,
-            "close": 数字0-100,
-            "high": 数字0-100,
-            "low": 数字0-100,
+            "score": 55,
+            "open": 52,     // ⚠️ 年初运势，不能和close相同！
+            "close": 58,    // ⚠️ 年尾运势，不能和open相同！
+            "high": 65,     // ⚠️ 年内最高，必须 ≥ max(52, 58)
+            "low": 48,      // ⚠️ 年内最低，必须 ≤ min(52, 58)
+            "reason": "详批文字30字左右"
+          },
+          {
+            "age": 2,
+            "year": 数字,
+            "ganZhi": "干支字符串",
+            "daYun": "大运字符串",
+            "score": 68,
+            "open": 58,     // 上一年的close
+            "close": 72,    // ✅ 阳线：年运上扬（close > open）
+            "high": 78,
+            "low": 55,
+            "reason": "详批文字30字左右"
+          },
+          {
+            "age": 3,
+            "year": 数字,
+            "ganZhi": "干支字符串",
+            "daYun": "大运字符串",
+            "score": 58,
+            "open": 72,     // 上一年的close
+            "close": 55,    // ✅ 阴线：遇冲克，年运下滑（close < open）
+            "high": 72,
+            "low": 50,
             "reason": "详批文字30字左右"
           }
-          // ... 共100个数据点
+          // ... 继续生成到100岁，必须包含阴阳线混合（约50-70%阳线，30-50%阴线）
         ]
       }
       
@@ -190,7 +346,7 @@ export async function POST(request: NextRequest) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
+              'Authorization': `Bearer ${finalApiKey}`
             },
             body: JSON.stringify({
               model: targetModel,
@@ -199,7 +355,7 @@ export async function POST(request: NextRequest) {
                 { role: 'user', content: userPrompt }
               ],
               response_format: { type: 'json_object' },
-              temperature: 0.7,
+              temperature: 0.9,
               stream: true
             })
           })
@@ -347,21 +503,30 @@ export async function POST(request: NextRequest) {
               typeof point.high === 'number' &&
               typeof point.low === 'number'
 
-            let open, close, high, low
+            let open: number, close: number, high: number, low: number
 
             if (hasCompleteKLineData) {
-              // 情况1: AI返回了完整K线数据，直接使用
+              // 情况1: AI返回了完整K线数据
               open = Math.min(100, Math.max(0, point.open))
               close = Math.min(100, Math.max(0, point.close))
-              high = Math.min(100, Math.max(0, point.high))
-              low = Math.max(0, Math.min(100, point.low))
 
-              // 更新 lastClose 供下一年使用
+              // 强制校验 High/Low，确保有影线 (美观性调整)
+              const bodyMax = Math.max(open, close)
+              const bodyMin = Math.min(open, close)
+
+              // 确保 High 至少比实体高 1-8 分
+              const rawHigh = Math.min(100, Math.max(0, point.high))
+              high = Math.max(rawHigh, bodyMax + (rawHigh <= bodyMax ? 1 + Math.floor(Math.random() * 5) : 0))
+
+              // 确保 Low 至少比实体低 1-8 分
+              const rawLow = Math.max(0, Math.min(100, point.low))
+              low = Math.min(rawLow, bodyMin - (rawLow >= bodyMin ? 1 + Math.floor(Math.random() * 5) : 0))
+
+              // 更新 lastClose
               lastClose = close
             } else {
               // 情况2: AI没有返回完整K线数据，用算法生成
-              // 第一年的 Open 基于 Score 稍作波动
-              // 后续年份的 Open 严格等于上一年的 Close
+              // 保持连续性：Open 接上一个 Close
               open = index === 0 ? Math.max(0, score - 2 + Math.floor(Math.random() * 5)) : lastClose
               close = score
 
@@ -373,11 +538,9 @@ export async function POST(request: NextRequest) {
               const bodyMin = Math.min(open, close)
               const bodyMax = Math.max(open, close)
 
-              // 生成影线 (High/Low)
-              // High 至少要比实体最高点高一点点 (1-5分)
-              // Low 至少要比实体最低点低一点点 (1-5分)
-              high = Math.min(100, bodyMax + 1 + Math.floor(Math.random() * 5))
-              low = Math.max(0, bodyMin - 1 - Math.floor(Math.random() * 5))
+              // 强制生成明显影线
+              high = Math.min(100, bodyMax + 2 + Math.floor(Math.random() * 8))
+              low = Math.max(0, bodyMin - 2 - Math.floor(Math.random() * 8))
 
               // 更新 lastClose 供下一次迭代使用
               lastClose = close
