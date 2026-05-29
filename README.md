@@ -437,7 +437,13 @@ npm run db:backup:clean
 
 ## 许可证
 
-[MIT License](LICENSE)
+本项目开源代码采用 [MIT License](LICENSE) 授权。
+
+> ⚠️ **关于 UI 组件授权的特别说明**：
+> 本项目的前端界面使用了 **Tailwind UI / Catalyst UI Kit** 商业组件（位于 `src/components/ui/` 目录下）。
+> - 根据 Tailwind Labs 的许可协议，**如果您仅克隆、部署或二次开发本项目本身作为最终应用，这是完全允许的。**
+> - **但如果您希望将本项目中的 UI 组件提取并复制到其他项目中使用，您必须拥有合法的 Tailwind UI / Catalyst 商业授权。** 
+> - 如果您没有相关授权，建议在衍生项目中使用开源 UI 库（如 DaisyUI、Flowbite 或 shadcn/ui）进行替换。
 
 ---
 

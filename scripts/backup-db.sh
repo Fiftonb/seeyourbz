@@ -32,8 +32,14 @@ case $BACKUP_TYPE in
         BACKUP_FILE="$BACKUP_DIR/dev-$TIMESTAMP.db"
         echo "📦 正在备份数据库文件..."
         
-        # macOS 优化的文件复制
-        cp "$DB_PATH" "$BACKUP_FILE"
+        # 针对 WAL 模式优化的在线备份方式（使用 sqlite3 官方 .backup 命令，保证数据一致性）
+        if command -v sqlite3 >/dev/null 2>&1; then
+            echo "💡 检测到 sqlite3，使用在线一致性备份 (WAL 友好)..."
+            sqlite3 "$DB_PATH" ".backup '$BACKUP_FILE'"
+        else
+            echo "⚠️  未检测到 sqlite3 命令，回退到标准文件复制..."
+            cp "$DB_PATH" "$BACKUP_FILE"
+        fi
         
         echo "✅ 备份完成: $BACKUP_FILE"
         ;;
