@@ -435,6 +435,16 @@ npm run db:backup:clean
 4. 推送分支：`git push origin feat/your-feature`
 5. 提交 Pull Request
 
+## 致谢
+
+感谢以下优秀开源项目与社区为本项目提供强有力的支持：
+
+- **[tyme4ts](https://github.com/6tail/tyme4ts)**：由 [6tail](https://github.com/6tail) 开发的杰出中国传统历法核心库，为本项目的黄历、命理、桃花运等核心逻辑提供了精确强大的算法支持。
+- **[Tailwind CSS](https://tailwindcss.com/) & [Catalyst UI Kit](https://tailwindui.com/templates/catalyst)**：为项目提供了精美而高度可定制的 UI 组件和现代化的样式基础。
+- **[LINUX.DO 社区](https://linux.do/)**：感谢充满活力与分享精神的 LINUX.DO 社区，本项目在此开源，并得到了社区伙伴们的启发与支持。
+
+同时感谢所有为项目提出宝贵意见、测试和支持本项目的开发者与使用者！
+
 ## 许可证
 
 本项目开源代码采用 [MIT License](LICENSE) 授权。
