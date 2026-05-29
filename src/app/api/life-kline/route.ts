@@ -21,6 +21,41 @@ const getStemPolarity = (pillar: string): 'YANG' | 'YIN' => {
   return 'YANG'
 }
 
+/**
+ * 过滤 AI 返回内容中的思考块、markdown 标记，并提取核心 JSON 串进行解析
+ */
+function cleanAndParseJson(text: string): any {
+  let cleaned = text.trim()
+
+  // 1. 移除 <think>...</think> 标签及其中的内容（如果存在）
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '')
+
+  // 2. 移除 markdown 代码块包裹 (```json ... ``` 或 ``` ... ```)
+  cleaned = cleaned.replace(/```json\s*([\s\S]*?)\s*```/g, '$1')
+  cleaned = cleaned.replace(/```\s*([\s\S]*?)\s*```/g, '$1')
+
+  cleaned = cleaned.trim()
+
+  // 3. 尝试直接解析
+  try {
+    return JSON.parse(cleaned)
+  } catch (e) {
+    // 4. 如果失败，尝试寻找第一个 '{' 和最后一个 '}'
+    const startIndex = cleaned.indexOf('{')
+    const endIndex = cleaned.lastIndexOf('}')
+    
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+      const jsonCandidate = cleaned.slice(startIndex, endIndex + 1)
+      try {
+        return JSON.parse(jsonCandidate)
+      } catch (innerError) {
+        throw new Error(`JSON解析失败。尝试提取的JSON候选串：${jsonCandidate.substring(0, 100)}...，错误：${innerError instanceof Error ? innerError.message : innerError}`)
+      }
+    }
+    throw e
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: LifeKLineRequest = await request.json()
@@ -242,37 +277,86 @@ ${timelineContext}
           const decoder = new TextDecoder()
           let fullContent = ''
           let chunkCount = 0
+          let buffer = ''
 
           while (true) {
             const { done, value } = await reader.read()
-            if (done) break
+            
+            if (value) {
+              buffer += decoder.decode(value, { stream: true })
+              let lineEndIndex
+              while ((lineEndIndex = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, lineEndIndex).trim()
+                buffer = buffer.slice(lineEndIndex + 1)
+                
+                if (line.startsWith('data: ')) {
+                  const dataStr = line.slice(6).trim()
+                  if (dataStr === '[DONE]') continue
 
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split('\n')
+                  try {
+                    const parsed = JSON.parse(dataStr)
+                    const content = parsed.choices?.[0]?.delta?.content || ''
+                    const reasoningContent = parsed.choices?.[0]?.delta?.reasoning_content || parsed.choices?.[0]?.delta?.thinking || ''
 
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6)
-                if (data === '[DONE]') continue
+                    if (reasoningContent) {
+                      // 发送推理过程，但不追加到 fullContent 中以避免影响后面的 JSON 解析
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: 'stream',
+                        content: reasoningContent,
+                        totalChars: fullContent.length
+                      })}\n\n`))
+                    }
 
-                try {
-                  const parsed = JSON.parse(data)
-                  const content = parsed.choices?.[0]?.delta?.content || ''
-                  if (content) {
-                    fullContent += content
-                    chunkCount++
+                    if (content) {
+                      fullContent += content
+                      chunkCount++
 
-                    // 每个chunk都发送实时内容
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                      type: 'stream',
-                      content: content,
-                      totalChars: fullContent.length
-                    })}\n\n`))
+                      // 每个chunk都发送实时内容
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: 'stream',
+                        content: content,
+                        totalChars: fullContent.length
+                      })}\n\n`))
+                    }
+                  } catch (e) {
+                    // 忽略解析错误的chunk
                   }
-                } catch (e) {
-                  // 忽略解析错误的chunk
                 }
               }
+            }
+
+            if (done) {
+              // 处理 buffer 中最后未包含换行符的剩余数据
+              const line = buffer.trim()
+              if (line && line.startsWith('data: ')) {
+                const dataStr = line.slice(6).trim()
+                if (dataStr !== '[DONE]') {
+                  try {
+                    const parsed = JSON.parse(dataStr)
+                    const content = parsed.choices?.[0]?.delta?.content || ''
+                    const reasoningContent = parsed.choices?.[0]?.delta?.reasoning_content || parsed.choices?.[0]?.delta?.thinking || ''
+                    
+                    if (reasoningContent) {
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: 'stream',
+                        content: reasoningContent,
+                        totalChars: fullContent.length
+                      })}\n\n`))
+                    }
+                    if (content) {
+                      fullContent += content
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: 'stream',
+                        content: content,
+                        totalChars: fullContent.length
+                      })}\n\n`))
+                    }
+                  } catch (e) {
+                    // 忽略解析错误
+                  }
+                }
+              }
+              break
             }
           }
 
@@ -287,7 +371,7 @@ ${timelineContext}
           // 解析JSON响应
           let data
           try {
-            data = JSON.parse(fullContent)
+            data = cleanAndParseJson(fullContent)
           } catch (parseError) {
             console.error('JSON Parse Error:', parseError)
             console.error('Raw content:', fullContent.substring(0, 500))
