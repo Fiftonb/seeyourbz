@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { LifeKLineRequest, BAZI_SYSTEM_INSTRUCTION } from '@/lib/life-kline/types'
 
-// 内置API配置（硬编码，不暴露给前端）
+// 内置API配置（从环境变量读取，不在源码中硬编码）
 const BUILTIN_API_CONFIG = {
-  apiBaseUrl: 'https://myai.naiai.net/v1',
-  modelName: 'gemini-2.5-flash-lite',
-  apiKey: 'sk-isVIFFgEAzwArCpU036mpYTkI0MYtvDN92HFcZm4cebKlTsD',
-  password: '哪啊哪啊' // 访问口令
+  apiBaseUrl: process.env.BUILTIN_API_BASE_URL || 'https://api.openai.com/v1',
+  modelName: process.env.BUILTIN_MODEL_NAME || 'gpt-4o-mini',
+  apiKey: process.env.BUILTIN_API_KEY || '',
+  password: process.env.BUILTIN_ACCESS_PASSWORD || ''
 }
 
 // 判断天干阴阳

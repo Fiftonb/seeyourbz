@@ -3,11 +3,11 @@
 
 	Usage examples:
 	- With env vars:
-		BAIDU_TOKEN=xxxx npm run seo:push-baidu -- --urls https://今夕何时.com/a https://今夕何时.com/b
+		BAIDU_SITE=your-site.com BAIDU_TOKEN=xxxx npm run seo:push-baidu -- --urls https://your-site.com/a https://your-site.com/b
 	- With file:
-		npm run seo:push-baidu -- --file urls.txt --site xn--wmq0mr3w3mn.com --token YOUR_TOKEN
+		npm run seo:push-baidu -- --file urls.txt --site your-site.com --token YOUR_TOKEN
 	- Direct with args:
-		npx tsx src/lib/baidu-push.ts --site xn--wmq0mr3w3mn.com --token YOUR_TOKEN --urls https://今夕何时.com/
+		npx tsx src/lib/baidu-push.ts --site your-site.com --token YOUR_TOKEN --urls https://your-site.com/
 */
 
 import fs from 'node:fs'
@@ -141,7 +141,7 @@ async function pushWithAdaptiveQuota(urls: string[], opts: { site: string; token
 
 async function main() {
 	const args = parseArgs(process.argv.slice(2))
-	const envSite = process.env.BAIDU_SITE || 'xn--wmq0mr3w3mn.com'
+	const envSite = process.env.BAIDU_SITE || ''
 	const envToken = process.env.BAIDU_TOKEN || process.env.BAIDU_PUSH_TOKEN || ''
 
 	const site = (typeof args.site === 'string' ? args.site : envSite).trim()

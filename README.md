@@ -1,15 +1,16 @@
 # 今夕何时 - 传统文化智能工具站
 
-一个集传统黄历、八字命理、桃花运测算、星座运势于一体的现代化传统文化学习平台，基于 [tyme4ts](https://github.com/6tail/tyme4ts) 日历工具库开发。
+一个集传统黄历、八字命理、桃花运测算、星座运势、AI 人生 K 线图于一体的现代化传统文化学习平台，基于 [tyme4ts](https://github.com/6tail/tyme4ts) 日历工具库开发。
 
 ## 项目特色
 
-✨ **多元化功能**：黄历查询、八字命理、桃花运测算、星座运势全覆盖  
+✨ **多元化功能**：黄历查询、八字命理、桃花运测算、星座运势、AI 人生 K 线图  
 🎨 **现代化设计**：基于 Catalyst UI Kit 的精美界面，支持暗色模式  
 📱 **响应式体验**：完美适配桌面端和移动端  
 🔐 **完整用户系统**：注册登录、个人资料、管理员后台  
 📊 **数据分析**：用户行为追踪和管理员统计面板  
-🌙 **传统文化**：深度结合中国传统历法和命理学
+🌙 **传统文化**：深度结合中国传统历法和命理学  
+🤖 **AI 驱动**：接入兼容 OpenAI 格式的大模型，生成个性化命理分析
 
 ## 技术栈
 
@@ -48,6 +49,13 @@
 - **幸运元素**：幸运颜色、数字、方位
 - **个性化建议**：基于星座特点的生活指导
 
+### 📈 AI 人生 K 线图
+- **百岁流年**：将 1-100 岁运势绘制成股票 K 线风格图表
+- **大运周期**：每十年大运清晰标注
+- **流年详批**：点击任意年份查看 AI 生成的详细分析
+- **多维分析**：事业、财运、婚姻、健康、六亲全覆盖
+- **灵活配置**：支持使用内置 API（需口令）或自带 OpenAI 兼容 API Key
+
 ### 👤 用户系统
 - **账户管理**：注册、登录、个人资料
 - **安全设置**：密码修改、邮箱变更
@@ -78,11 +86,31 @@ npm install
 ```bash
 # 复制环境变量模板
 cp .env.example .env.local
-
-# 编辑环境变量
-# DATABASE_URL="file:./dev.db"
-# JWT_SECRET="your-super-secret-jwt-key"
 ```
+
+编辑 `.env.local`，填入以下必要配置：
+
+```env
+# 数据库（默认 SQLite，无需修改）
+DATABASE_URL="file:./dev.db"
+
+# JWT 认证密钥（使用 openssl rand -base64 32 生成）
+JWT_SECRET="your-jwt-secret"
+NEXTAUTH_SECRET="your-nextauth-secret"
+
+# 站点 URL（生产环境修改为实际域名）
+NEXT_PUBLIC_SITE_URL="http://localhost:12333"
+NEXTAUTH_URL="http://localhost:12333"
+```
+
+> 如需启用 **AI 人生 K 线图**的内置 API 模式，还需配置：
+> ```env
+> BUILTIN_API_BASE_URL="https://api.openai.com/v1"
+> BUILTIN_MODEL_NAME="gpt-4o-mini"
+> BUILTIN_API_KEY="sk-your-api-key"
+> BUILTIN_ACCESS_PASSWORD="your-access-password"
+> ```
+> 不配置时，用户仍可选择「自定义 API」模式，自带 Key 使用。
 
 ### 4. 数据库初始化
 
@@ -168,15 +196,19 @@ npm run db:generate  # 生成 Prisma 客户端代码
 npm run db:seed      # 运行数据种子脚本
 
 # 数据库备份相关 (跨平台兼容)
-npm run db:backup    # 备份数据库文件 (文件复制方式) 
-npm run db:backup:dump # 备份数据库为 SQL 脚本
-npm run db:restore   # 显示恢复数据库的帮助信息
-npm run db:reset     # 重置数据库 (删除并重新创建)
-npm run db:backup:clean # 清理30天前的备份文件
+npm run db:backup         # 备份数据库文件 (文件复制方式)
+npm run db:backup:dump    # 备份数据库为 SQL 脚本
+npm run db:restore        # 显示恢复数据库的帮助信息
+npm run db:reset          # 重置数据库 (删除并重新创建)
+npm run db:backup:clean   # 清理30天前的备份文件
 
 # 系统专用备份脚本 (增强功能)
-npm run db:backup:linux  # Linux 优化版备份脚本
-npm run db:backup:macos  # macOS 优化版备份脚本
+npm run db:backup:linux   # Linux 优化版备份脚本
+npm run db:backup:macos   # macOS 优化版备份脚本
+
+# SEO 相关（需在 .env.local 中配置 BAIDU_SITE 和 BAIDU_TOKEN）
+npm run seo:push-baidu             # 手动推送 URL 到百度
+npm run seo:push-baidu:sitemap -- <sitemap-url>  # 通过 sitemap 批量推送
 ```
 
 ## 数据库模型
@@ -393,10 +425,20 @@ npm run db:backup:clean
 - [`prisma/BACKUP.md`](prisma/BACKUP.md) - 完整的备份和恢复流程
 - [`PLATFORM-COMPATIBILITY.md`](PLATFORM-COMPATIBILITY.md) - 跨平台兼容性详细说明
 
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+1. Fork 本仓库
+2. 创建功能分支：`git checkout -b feat/your-feature`
+3. 提交更改：`git commit -m 'feat: add some feature'`
+4. 推送分支：`git push origin feat/your-feature`
+5. 提交 Pull Request
+
 ## 许可证
 
-MIT License
+[MIT License](LICENSE)
 
 ---
 
-**今夕何时** - 传承文化，智慧生活 
+**今夕何时** - 传承文化，智慧生活

@@ -21,7 +21,7 @@
     "db:backup:macos": "./scripts/backup-db.sh",
     "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
     "seo:push-baidu": "tsx src/lib/baidu-push.ts",
-    "seo:push-baidu:sitemap": "BAIDU_SITE=xn--wmq0mr3w3mn.com BAIDU_TOKEN=3CpNJ2ZUWPa2O7p2 tsx src/lib/baidu-push.ts --sitemap https://今夕何时.com/sitemap.xml"
+    "seo:push-baidu:sitemap": "tsx src/lib/baidu-push.ts --sitemap"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

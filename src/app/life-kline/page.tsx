@@ -24,7 +24,7 @@ export default function LifeKLinePage() {
   const [useBuiltinApi, setUseBuiltinApi] = useState<boolean>(true) // 默认使用内置API
   const [builtinPassword, setBuiltinPassword] = useState<string>('')
   const [apiKey, setApiKey] = useState<string>('')
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://myai.naiai.net/v1')
+  const [apiBaseUrl, setApiBaseUrl] = useState<string>('https://api.openai.com/v1')
   const [modelName, setModelName] = useState<string>('gemini-2.5-flash-lite')
 
   // 结果状态
@@ -542,7 +542,7 @@ export default function LifeKLinePage() {
                           type="text"
                           value={apiBaseUrl}
                           onChange={(e) => setApiBaseUrl(e.target.value)}
-                          placeholder="https://myai.naiai.net/v1"
+                          placeholder="https://api.openai.com/v1"
                           className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 text-base"
                         />
                       </div>
