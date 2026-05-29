@@ -37,6 +37,8 @@ next-env.d.ts
 # database
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/dev.db-shm
+/prisma/dev.db-wal
 
 # IDE
 .vscode/
