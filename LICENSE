@@ -19,3 +19,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+### Special License Note for Catalyst UI Kit / Tailwind UI
+
+This project uses Tailwind UI / Catalyst UI Kit components (located in `src/components/ui/`). While the overall project codebase and its custom code are licensed under the MIT License, the Catalyst UI Kit / Tailwind UI components are proprietary assets of Tailwind Labs and are governed by their own commercial license.
+
+- **For using or deploying this project as an end-product**: You are permitted to run, modify, and host this project.
+- **For extraction and reuse**: If you intend to copy or extract the components from `src/components/ui/` to use them in another project, you must possess a valid, paid license for Tailwind UI / Catalyst. If you do not have a license, you should replace these UI components with an open-source alternative (e.g., DaisyUI, Flowbite, shadcn/ui).
+
